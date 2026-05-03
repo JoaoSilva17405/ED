@@ -33,11 +33,17 @@
             <Add option="-Wall" />
             <Add directory="src" />
         </Compiler>
+        <Unit filename="src/catalog.c"><Option compilerVar="CC" /></Unit>
+        <Unit filename="src/catalog.h" />
+        <Unit filename="src/client_registry.c"><Option compilerVar="CC" /></Unit>
+        <Unit filename="src/client_registry.h" />
         <Unit filename="src/common.h" />
         <Unit filename="src/config.c"><Option compilerVar="CC" /></Unit>
         <Unit filename="src/config.h" />
         <Unit filename="src/customer.c"><Option compilerVar="CC" /></Unit>
         <Unit filename="src/customer.h" />
+        <Unit filename="src/employee.c"><Option compilerVar="CC" /></Unit>
+        <Unit filename="src/employee.h" />
         <Unit filename="src/hash.c"><Option compilerVar="CC" /></Unit>
         <Unit filename="src/hash.h" />
         <Unit filename="src/logging.c"><Option compilerVar="CC" /></Unit>

@@ -1,0 +1,17 @@
+timestamp,acao,detalhes
+2026-05-03 18:39:31,CARREGAR_DADOS,data/Dados.txt
+2026-05-03 18:39:31,MENU,Avancar simulacao
+2026-05-03 18:39:31,FECHAR_CAIXA_SUAVE_AUTO,Patricia Cabral Henriques Bras
+2026-05-03 18:39:31,FECHAR_CAIXA_SUAVE_AUTO,Fabio Nabais Ferreira
+2026-05-03 18:39:31,FECHAR_CAIXA_SUAVE_AUTO,Maria Soraia Bullitta Portela
+2026-05-03 18:39:31,CLIENTE_ATENDIDO,P31 atendido na caixa 3 | espera=1 | oferecidos=0 | valor_oferecido=0.00
+2026-05-03 18:39:31,CLIENTE_ATENDIDO,P21 atendido na caixa 2 | espera=1 | oferecidos=0 | valor_oferecido=0.00
+2026-05-03 18:39:31,CLIENTE_ATENDIDO,P51 atendido na caixa 5 | espera=1 | oferecidos=0 | valor_oferecido=0.00
+2026-05-03 18:39:31,CLIENTE_ATENDIDO,P32 atendido na caixa 3 | espera=12 | oferecidos=0 | valor_oferecido=0.00
+2026-05-03 18:39:31,CLIENTE_ATENDIDO,P22 atendido na caixa 2 | espera=13 | oferecidos=0 | valor_oferecido=0.00
+2026-05-03 18:39:31,CLIENTE_ATENDIDO,P1 atendido na caixa 1 | espera=1 | oferecidos=0 | valor_oferecido=0.00
+2026-05-03 18:39:31,CLIENTE_ATENDIDO,P23 atendido na caixa 2 | espera=17 | oferecidos=0 | valor_oferecido=0.00
+2026-05-03 18:39:31,CLIENTE_ATENDIDO,P52 atendido na caixa 5 | espera=14 | oferecidos=0 | valor_oferecido=0.00
+2026-05-03 18:39:31,CLIENTE_ATENDIDO,P24 atendido na caixa 2 | espera=31 | oferecidos=0 | valor_oferecido=0.00
+2026-05-03 18:39:31,MENU,Mostrar estatisticas finais
+2026-05-03 18:39:31,MENU,Sair

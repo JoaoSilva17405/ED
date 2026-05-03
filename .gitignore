@@ -1,0 +1,9 @@
+bin/
+obj/
+compra_aqui
+compra_aqui_test
+compra_aqui_test.exe
+*.exe
+*.o
+*.depend
+*.layout

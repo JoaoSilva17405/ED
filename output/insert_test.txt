@@ -1,0 +1,109 @@
+
+================ COMPRA AQUI LDA. ================
+1. Mostrar configuracao
+2. Mostrar estado das caixas
+3. Avancar simulacao
+4. Inserir novo cliente
+5. Mudar cliente de caixa
+6. Abrir caixa manualmente
+7. Fechar caixa suavemente
+8. Fechar caixa imediatamente e redistribuir
+9. Pesquisar cliente
+10. Mostrar memoria utilizada
+11. Mostrar memoria desperdicada
+12. Mostrar estatisticas finais
+13. Gravar estatisticas CSV
+0. Sair
+Opcao: ID do cliente: Numero de produtos: Cliente colocado na caixa 1.
+
+================ COMPRA AQUI LDA. ================
+1. Mostrar configuracao
+2. Mostrar estado das caixas
+3. Avancar simulacao
+4. Inserir novo cliente
+5. Mudar cliente de caixa
+6. Abrir caixa manualmente
+7. Fechar caixa suavemente
+8. Fechar caixa imediatamente e redistribuir
+9. Pesquisar cliente
+10. Mostrar memoria utilizada
+11. Mostrar memoria desperdicada
+12. Mostrar estatisticas finais
+13. Gravar estatisticas CSV
+0. Sair
+Opcao: ID do cliente a pesquisar: 
+Cliente X1 encontrado na caixa 1, posicao 2 na fila.
+Cliente X1 | produtos=3 | caixa=1 | espera=0 | oferecidos=0 | valor_oferecido=0.00
+
+================ COMPRA AQUI LDA. ================
+1. Mostrar configuracao
+2. Mostrar estado das caixas
+3. Avancar simulacao
+4. Inserir novo cliente
+5. Mudar cliente de caixa
+6. Abrir caixa manualmente
+7. Fechar caixa suavemente
+8. Fechar caixa imediatamente e redistribuir
+9. Pesquisar cliente
+10. Mostrar memoria utilizada
+11. Mostrar memoria desperdicada
+12. Mostrar estatisticas finais
+13. Gravar estatisticas CSV
+0. Sair
+Opcao: ID do cliente: Numero de produtos: Cliente ja existe em espera.
+
+================ COMPRA AQUI LDA. ================
+1. Mostrar configuracao
+2. Mostrar estado das caixas
+3. Avancar simulacao
+4. Inserir novo cliente
+5. Mudar cliente de caixa
+6. Abrir caixa manualmente
+7. Fechar caixa suavemente
+8. Fechar caixa imediatamente e redistribuir
+9. Pesquisar cliente
+10. Mostrar memoria utilizada
+11. Mostrar memoria desperdicada
+12. Mostrar estatisticas finais
+13. Gravar estatisticas CSV
+0. Sair
+Opcao: ID do cliente: Numero de produtos: Dados invalidos: indique um ID nao vazio e numero de produtos superior a zero.
+
+================ COMPRA AQUI LDA. ================
+1. Mostrar configuracao
+2. Mostrar estado das caixas
+3. Avancar simulacao
+4. Inserir novo cliente
+5. Mudar cliente de caixa
+6. Abrir caixa manualmente
+7. Fechar caixa suavemente
+8. Fechar caixa imediatamente e redistribuir
+9. Pesquisar cliente
+10. Mostrar memoria utilizada
+11. Mostrar memoria desperdicada
+12. Mostrar estatisticas finais
+13. Gravar estatisticas CSV
+0. Sair
+Opcao: 
+================ ESTATISTICAS FINAIS ================
+Instante final: 0
+Total de clientes atendidos: 0
+Total de produtos vendidos: 0
+Tempo medio de espera: 0.00
+Produtos oferecidos: 0
+Valor oferecido: 0.00
+Caixa que atendeu mais pessoas: Caixa 1 (Operador_1) com 0 clientes
+Caixa que vendeu mais produtos: Caixa 1 (Operador_1) com 0 produtos
+Operador que atendeu menos pessoas: Operador_1 com 0 clientes
+Historico da caixa 1 (Operador_1):
+  (sem clientes atendidos)
+Historico da caixa 2 (Operador_2):
+  (sem clientes atendidos)
+Historico da caixa 3 (Operador_3):
+  (sem clientes atendidos)
+Historico da caixa 4 (Operador_4):
+  (sem clientes atendidos)
+Historico da caixa 5 (Operador_5):
+  (sem clientes atendidos)
+Historico da caixa 6 (Operador_6):
+  (sem clientes atendidos)

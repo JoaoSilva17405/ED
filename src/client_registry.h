@@ -16,6 +16,7 @@ typedef struct {
 
 RegistoClientes *registo_carregar(const char *filename);
 EntradaCliente  *registo_obter_aleatorio(const RegistoClientes *registo);
+EntradaCliente  *registo_pesquisar_id(const RegistoClientes *registo, const char *id);
 void             registo_destruir(RegistoClientes *registo);
 
 #endif

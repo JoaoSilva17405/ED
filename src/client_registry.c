@@ -62,6 +62,15 @@ RegistoClientes *registo_carregar(const char *filename) {
     return reg;
 }
 
+EntradaCliente *registo_pesquisar_id(const RegistoClientes *registo, const char *id) {
+    int i;
+    if (!registo || !id) return NULL;
+    for (i = 0; i < registo->tamanho; i++) {
+        if (strcmp(registo->lista[i].id, id) == 0) return &registo->lista[i];
+    }
+    return NULL;
+}
+
 EntradaCliente *registo_obter_aleatorio(const RegistoClientes *registo) {
     if (!registo || registo->tamanho == 0) return NULL;
     return &registo->lista[rand() % registo->tamanho];

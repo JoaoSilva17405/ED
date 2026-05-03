@@ -101,6 +101,48 @@ Produto *catalog_obter_produtos_aleatorios(const CatalogoProdutos *cat, int n, c
     return produtos;
 }
 
+static int str_icontains(const char *haystack, const char *needle) {
+    size_t hlen = strlen(haystack), nlen = strlen(needle);
+    size_t i, j;
+    if (nlen == 0) return 1;
+    if (nlen > hlen) return 0;
+    for (i = 0; i <= hlen - nlen; i++) {
+        int match = 1;
+        for (j = 0; j < nlen; j++) {
+            if (tolower((unsigned char)haystack[i + j]) != tolower((unsigned char)needle[j])) {
+                match = 0;
+                break;
+            }
+        }
+        if (match) return 1;
+    }
+    return 0;
+}
+
+int catalog_pesquisar(const CatalogoProdutos *cat, const char *termo, Produto **resultados, int max) {
+    int i, n = 0;
+    int por_id;
+    int id_alvo = 0;
+
+    if (!cat || !termo || termo[0] == '\0' || !resultados || max <= 0) return 0;
+
+    por_id = isdigit((unsigned char)termo[0]);
+    if (por_id) id_alvo = atoi(termo);
+
+    for (i = 0; i < cat->tamanho && n < max; i++) {
+        if (por_id) {
+            if (cat->lista[i].id == id_alvo) {
+                resultados[n++] = &cat->lista[i];
+            }
+        } else {
+            if (str_icontains(cat->lista[i].nome, termo)) {
+                resultados[n++] = &cat->lista[i];
+            }
+        }
+    }
+    return n;
+}
+
 void catalog_destruir(CatalogoProdutos *cat) {
     if (!cat) return;
     free(cat->lista);

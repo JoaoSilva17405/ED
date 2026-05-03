@@ -121,20 +121,79 @@ int main(void) {
                         else printf("Nao foi possivel mover o cliente.\n");
                     }
                 } else {
-                    int nProdutos;
-                    int resultado;
+                    /* lookup nome silencioso no registo */
                     nome[0] = '\0';
                     if (registo) {
                         EntradaCliente *entrada = registo_pesquisar_id(registo, id);
-                        if (entrada) strncpy(nome, entrada->nome, sizeof(nome) - 1);
+                        if (entrada) {
+                            strncpy(nome, entrada->nome, sizeof(nome) - 1);
+                            nome[sizeof(nome) - 1] = '\0';
+                        }
                     }
-                    nProdutos = ler_int("Numero de produtos: ");
-                    resultado = inserir_novo_cliente(&sm, &hash, id, nome, nProdutos);
-                    if (resultado == INSERIR_CLIENTE_INVALIDO) printf("Dados invalidos: indique um ID nao vazio e numero de produtos superior a zero.\n");
-                    else if (resultado == INSERIR_CLIENTE_SEM_CAIXA) printf("Nao existe nenhuma caixa disponivel para receber o cliente.\n");
-                    else if (resultado == INSERIR_CLIENTE_MEMORIA) printf("Nao foi possivel reservar memoria para inserir o cliente.\n");
-                    else if (resultado >= 0) printf("Cliente colocado na caixa %d.\n", resultado + 1);
-                    else printf("Nao foi possivel inserir cliente.\n");
+                    if (nome[0] == '\0') {
+                        ler_string("Nome do cliente: ", nome, sizeof(nome));
+                    }
+                    if (catalogo) {
+                        /* loop interativo de selecao de produtos */
+                        Produto carrinho[256];
+                        int nCarrinho = 0;
+                        int cancelar = 0;
+
+                        for (;;) {
+                            char termo[MAX_NOME];
+                            ler_string("Pesquisar produto (nome/ID, Enter para terminar): ", termo, sizeof(termo));
+                            if (termo[0] == '\0') {
+                                if (nCarrinho == 0) {
+                                    printf("Carrinho vazio, insercao cancelada.\n");
+                                    cancelar = 1;
+                                }
+                                break;
+                            }
+                            {
+                                Produto *resultados[10];
+                                int nRes = catalog_pesquisar(catalogo, termo, resultados, 10);
+                                if (nRes == 0) {
+                                    printf("Nenhum produto encontrado.\n");
+                                } else {
+                                    int i, escolha;
+                                    for (i = 0; i < nRes; i++) {
+                                        printf("%d. %s [%d] %.2f EUR (%ds)\n",
+                                            i + 1, resultados[i]->nome, resultados[i]->id,
+                                            resultados[i]->preco, resultados[i]->tempoPassagem);
+                                    }
+                                    escolha = ler_int("Selecionar (0 para cancelar): ");
+                                    if (escolha >= 1 && escolha <= nRes) {
+                                        if (nCarrinho < 256) {
+                                            carrinho[nCarrinho++] = *resultados[escolha - 1];
+                                            carrinho[nCarrinho - 1].oferecido = false;
+                                            printf("Produto adicionado ao carrinho.\n");
+                                        } else {
+                                            printf("Carrinho cheio (maximo 256 produtos).\n");
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        if (!cancelar && nCarrinho > 0) {
+                            int i, resultado;
+                            printf("\n--- Carrinho ---\n");
+                            for (i = 0; i < nCarrinho; i++) {
+                                printf("  %s [%d] %.2f EUR (%ds)\n",
+                                    carrinho[i].nome, carrinho[i].id,
+                                    carrinho[i].preco, carrinho[i].tempoPassagem);
+                            }
+                            printf("----------------\n");
+                            resultado = inserir_novo_cliente(&sm, &hash, id, nome, carrinho, nCarrinho);
+                            if (resultado == INSERIR_CLIENTE_INVALIDO) printf("Dados invalidos.\n");
+                            else if (resultado == INSERIR_CLIENTE_SEM_CAIXA) printf("Nao existe nenhuma caixa disponivel.\n");
+                            else if (resultado == INSERIR_CLIENTE_MEMORIA) printf("Nao foi possivel reservar memoria.\n");
+                            else if (resultado >= 0) printf("Cliente colocado na caixa %d.\n", resultado + 1);
+                            else printf("Nao foi possivel inserir cliente.\n");
+                        }
+                    } else {
+                        printf("Catalogo nao disponivel.\n");
+                    }
                 }
                 break;
             }

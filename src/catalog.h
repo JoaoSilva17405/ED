@@ -13,6 +13,7 @@ typedef struct {
 
 CatalogoProdutos *catalog_carregar(const char *filename);
 Produto          *catalog_obter_produtos_aleatorios(const CatalogoProdutos *cat, int n, const Configuracao *cfg);
+int               catalog_pesquisar(const CatalogoProdutos *cat, const char *termo, Produto **resultados, int max);
 void              catalog_destruir(CatalogoProdutos *cat);
 
 #endif

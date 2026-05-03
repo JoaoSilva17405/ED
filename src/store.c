@@ -215,28 +215,29 @@ void mostrar_estado_supermercado(const Supermercado *sm) {
     for (i = 0; i < sm->cfg.nCaixas; ++i) mostrar_caixa(&sm->caixas[i]);
 }
 
-int inserir_novo_cliente(Supermercado *sm, HashClientes *hash, const char *idOriginal, const char *nome, int nProdutos) {
+int inserir_novo_cliente(Supermercado *sm, HashClientes *hash, const char *idOriginal, const char *nome, Produto *produtos, int nProdutos) {
     int destino;
     char detalhes[128];
     char id[MAX_ID];
     Cliente *cliente;
+    Produto *prods_copy;
+    int i;
 
     strncpy(id, idOriginal, sizeof(id) - 1);
     id[sizeof(id) - 1] = '\0';
     trim(id);
-    if (id[0] == '\0' || nProdutos <= 0) return INSERIR_CLIENTE_INVALIDO;
+    if (id[0] == '\0' || !produtos || nProdutos <= 0) return INSERIR_CLIENTE_INVALIDO;
 
     if (hash_pesquisar(hash, id)) return INSERIR_CLIENTE_DUPLICADO;
 
     destino = encontrar_caixa_para_novo_cliente(sm);
     if (destino == -1) return INSERIR_CLIENTE_SEM_CAIXA;
 
-    {
-        Produto *prods = sm->catalogo
-            ? catalog_obter_produtos_aleatorios(sm->catalogo, nProdutos, &sm->cfg)
-            : gerar_produtos_aleatorios(nProdutos, &sm->cfg);
-        cliente = criar_cliente(id, nome ? nome : "", nProdutos, sm->instanteAtual, destino, prods);
-    }
+    prods_copy = (Produto *)malloc(sizeof(Produto) * nProdutos);
+    if (!prods_copy) return INSERIR_CLIENTE_MEMORIA;
+    for (i = 0; i < nProdutos; i++) prods_copy[i] = produtos[i];
+
+    cliente = criar_cliente(id, nome ? nome : "", nProdutos, sm->instanteAtual, destino, prods_copy);
     if (!cliente) return INSERIR_CLIENTE_MEMORIA;
     if (!fila_inserir(&sm->caixas[destino].fila, cliente)) {
         destruir_cliente(cliente);

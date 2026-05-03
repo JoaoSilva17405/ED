@@ -41,7 +41,7 @@ void supermercado_destruir(Supermercado *sm, HashClientes *hash);
 int carregar_dados_iniciais(const char *filename, Supermercado *sm, HashClientes *hash);
 void mostrar_estado_supermercado(const Supermercado *sm);
 void mostrar_caixa(const Caixa *caixa);
-int inserir_novo_cliente(Supermercado *sm, HashClientes *hash, const char *id, const char *nome, int nProdutos);
+int inserir_novo_cliente(Supermercado *sm, HashClientes *hash, const char *id, const char *nome, Produto *produtos, int nProdutos);
 int mover_cliente_caixa(Supermercado *sm, HashClientes *hash, const char *id, int novaCaixa);
 void avancar_simulacao(Supermercado *sm, HashClientes *hash, int passos);
 void verificar_politica_caixas(Supermercado *sm, HashClientes *hash);

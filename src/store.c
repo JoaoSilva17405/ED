@@ -84,11 +84,12 @@ static void redistribuir_fila(Supermercado *sm, HashClientes *hash, int idCaixa)
     }
 }
 
-int supermercado_init(Supermercado *sm, const Configuracao *cfg, FILE *logFile, ListaFuncionarios *funcionarios) {
+int supermercado_init(Supermercado *sm, const Configuracao *cfg, FILE *logFile, ListaFuncionarios *funcionarios, CatalogoProdutos *catalogo) {
     int i;
     sm->cfg = *cfg;
     sm->caixas = (Caixa *)malloc(sizeof(Caixa) * cfg->nCaixas);
     if (!sm->caixas) return 0;
+    sm->catalogo = catalogo;
     sm->instanteAtual = 0;
     sm->totalClientesAtendidos = 0;
     sm->totalProdutosVendidos = 0;
@@ -169,7 +170,12 @@ int carregar_dados_iniciais(const char *filename, Supermercado *sm, HashClientes
             if (sscanf(linha, "%31[^:]: %d", id, &nProdutos) == 2 || sscanf(linha, "%31[^:]:%d", id, &nProdutos) == 2) {
                 Cliente *cliente;
                 trim(id);
-                cliente = criar_cliente(id, "", nProdutos, sm->instanteAtual, caixaAtual, &sm->cfg);
+                {
+                    Produto *prods = sm->catalogo
+                        ? catalog_obter_produtos_aleatorios(sm->catalogo, nProdutos, &sm->cfg)
+                        : gerar_produtos_aleatorios(nProdutos, &sm->cfg);
+                    cliente = criar_cliente(id, "", nProdutos, sm->instanteAtual, caixaAtual, prods);
+                }
                 if (cliente) {
                     if (fila_inserir(&sm->caixas[caixaAtual].fila, cliente) && hash_inserir(hash, cliente, caixaAtual)) {
                         clientesLidosParaCaixa++;
@@ -225,7 +231,12 @@ int inserir_novo_cliente(Supermercado *sm, HashClientes *hash, const char *idOri
     destino = encontrar_caixa_para_novo_cliente(sm);
     if (destino == -1) return INSERIR_CLIENTE_SEM_CAIXA;
 
-    cliente = criar_cliente(id, nome ? nome : "", nProdutos, sm->instanteAtual, destino, &sm->cfg);
+    {
+        Produto *prods = sm->catalogo
+            ? catalog_obter_produtos_aleatorios(sm->catalogo, nProdutos, &sm->cfg)
+            : gerar_produtos_aleatorios(nProdutos, &sm->cfg);
+        cliente = criar_cliente(id, nome ? nome : "", nProdutos, sm->instanteAtual, destino, prods);
+    }
     if (!cliente) return INSERIR_CLIENTE_MEMORIA;
     if (!fila_inserir(&sm->caixas[destino].fila, cliente)) {
         destruir_cliente(cliente);

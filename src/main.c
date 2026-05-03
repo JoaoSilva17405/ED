@@ -3,6 +3,7 @@
 #include "hash.h"
 #include "utils.h"
 #include "client_registry.h"
+#include "catalog.h"
 
 static void menu_principal(void) {
     printf("\n================ COMPRA AQUI LDA. ================\n");
@@ -28,6 +29,7 @@ int main(void) {
     HashClientes hash;
     ListaFuncionarios *funcionarios;
     RegistoClientes *registo;
+    CatalogoProdutos *catalogo;
     FILE *logFile;
     int opcao;
 
@@ -51,12 +53,19 @@ int main(void) {
         printf("Registo de clientes carregado: %d clientes.\n", registo->tamanho);
     }
 
+    catalogo = catalog_carregar(PRODUTOS_FILE);
+    if (!catalogo) {
+        printf("Aviso: nao foi possivel carregar %s — produtos aleatorios serao usados.\n", PRODUTOS_FILE);
+    } else {
+        printf("Catalogo de produtos carregado: %d produtos.\n", catalogo->tamanho);
+    }
+
     hash_init(&hash);
     logFile = abrir_log_acoes(LOG_FILE);
     if (!logFile) {
         printf("Aviso: nao foi possivel criar %s\n", LOG_FILE);
     }
-    if (!supermercado_init(&sm, &cfg, logFile, funcionarios)) {
+    if (!supermercado_init(&sm, &cfg, logFile, funcionarios, catalogo)) {
         printf("Erro: nao foi possivel inicializar as estruturas do supermercado.\n");
         funcionarios_destruir(funcionarios);
         fechar_log(logFile);
@@ -202,6 +211,7 @@ int main(void) {
     supermercado_destruir(&sm, &hash);
     funcionarios_destruir(funcionarios);
     registo_destruir(registo);
+    catalog_destruir(catalogo);
     fechar_log(logFile);
     return 0;
 }

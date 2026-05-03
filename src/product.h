@@ -5,8 +5,10 @@
 #include "config.h"
 
 typedef struct {
+    int id;
     char nome[MAX_NOME];
     float preco;
+    float stock;
     int tempoPassagem;
     bool oferecido;
 } Produto;

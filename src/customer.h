@@ -21,7 +21,7 @@ typedef struct Cliente {
     bool oferecimentoFeito;
 } Cliente;
 
-Cliente *criar_cliente(const char *id, const char *nome, int nProdutos, int instanteAtual, int caixaAtual, const Configuracao *cfg);
+Cliente *criar_cliente(const char *id, const char *nome, int nProdutos, int instanteAtual, int caixaAtual, Produto *produtos);
 void destruir_cliente(Cliente *cliente);
 int cliente_tempo_atendimento(const Cliente *cliente);
 float cliente_valor_total(const Cliente *cliente);

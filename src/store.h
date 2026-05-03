@@ -7,11 +7,13 @@
 #include "hash.h"
 #include "logging.h"
 #include "employee.h"
+#include "catalog.h"
 
 #define CONFIG_FILE "data/Configuracao.txt"
 #define DATA_FILE "data/Dados.txt"
 #define FUNCIONARIOS_FILE "data/funcionarios.txt"
 #define CLIENTES_FILE     "Clientes.txt"
+#define PRODUTOS_FILE     "Produtos.txt"
 #define LOG_FILE "output/historico_utilizador.csv"
 #define ESTATISTICAS_FILE "output/estatisticas.csv"
 #define HISTORICO_CAIXAS_FILE "output/historico_caixas.csv"
@@ -24,6 +26,7 @@
 typedef struct {
     Configuracao cfg;
     Caixa *caixas;
+    CatalogoProdutos *catalogo;
     int instanteAtual;
     int totalClientesAtendidos;
     int totalProdutosVendidos;
@@ -33,7 +36,7 @@ typedef struct {
     FILE *logFile;
 } Supermercado;
 
-int supermercado_init(Supermercado *sm, const Configuracao *cfg, FILE *logFile, ListaFuncionarios *funcionarios);
+int supermercado_init(Supermercado *sm, const Configuracao *cfg, FILE *logFile, ListaFuncionarios *funcionarios, CatalogoProdutos *catalogo);
 void supermercado_destruir(Supermercado *sm, HashClientes *hash);
 int carregar_dados_iniciais(const char *filename, Supermercado *sm, HashClientes *hash);
 void mostrar_estado_supermercado(const Supermercado *sm);

@@ -1,6 +1,6 @@
 #include "customer.h"
 
-Cliente *criar_cliente(const char *id, const char *nome, int nProdutos, int instanteAtual, int caixaAtual, const Configuracao *cfg) {
+Cliente *criar_cliente(const char *id, const char *nome, int nProdutos, int instanteAtual, int caixaAtual, Produto *produtos) {
     Cliente *cliente = (Cliente *)malloc(sizeof(Cliente));
     if (!cliente) return NULL;
 
@@ -9,7 +9,7 @@ Cliente *criar_cliente(const char *id, const char *nome, int nProdutos, int inst
     strncpy(cliente->nome, nome ? nome : "", sizeof(cliente->nome) - 1);
     cliente->nome[sizeof(cliente->nome) - 1] = '\0';
     cliente->nProdutos = nProdutos;
-    cliente->produtos = gerar_produtos_aleatorios(nProdutos, cfg);
+    cliente->produtos = produtos;
     if (!cliente->produtos) {
         free(cliente);
         return NULL;

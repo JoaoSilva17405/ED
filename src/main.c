@@ -2,6 +2,7 @@
 #include "store.h"
 #include "hash.h"
 #include "utils.h"
+#include "client_registry.h"
 
 static void menu_principal(void) {
     printf("\n================ COMPRA AQUI LDA. ================\n");
@@ -26,6 +27,7 @@ int main(void) {
     Supermercado sm;
     HashClientes hash;
     ListaFuncionarios *funcionarios;
+    RegistoClientes *registo;
     FILE *logFile;
     int opcao;
 
@@ -40,6 +42,13 @@ int main(void) {
     funcionarios = funcionarios_carregar(FUNCIONARIOS_FILE);
     if (!funcionarios) {
         printf("Aviso: nao foi possivel carregar %s — operadores genericos serao usados.\n", FUNCIONARIOS_FILE);
+    }
+
+    registo = registo_carregar(CLIENTES_FILE);
+    if (!registo) {
+        printf("Aviso: nao foi possivel carregar %s — IDs manuais serao usados.\n", CLIENTES_FILE);
+    } else {
+        printf("Registo de clientes carregado: %d clientes.\n", registo->tamanho);
     }
 
     hash_init(&hash);
@@ -86,12 +95,30 @@ int main(void) {
             }
             case 4: {
                 char id[MAX_ID];
+                char nome[MAX_NOME];
                 int nProdutos;
                 int resultado;
+                int usou_registo = 0;
                 log_acao(logFile, "MENU", "Inserir novo cliente");
-                ler_string("ID do cliente: ", id, sizeof(id));
+                nome[0] = '\0';
+                if (registo) {
+                    EntradaCliente *sugestao = registo_obter_aleatorio(registo);
+                    if (sugestao) {
+                        char resp[4];
+                        printf("Sugestao do registo: %s (%s)\n", sugestao->id, sugestao->nome);
+                        printf("Usar este cliente? (s/n): ");
+                        if (fgets(resp, sizeof(resp), stdin) && (resp[0] == 's' || resp[0] == 'S')) {
+                            strncpy(id, sugestao->id, sizeof(id) - 1);
+                            id[sizeof(id) - 1] = '\0';
+                            strncpy(nome, sugestao->nome, sizeof(nome) - 1);
+                            nome[sizeof(nome) - 1] = '\0';
+                            usou_registo = 1;
+                        }
+                    }
+                }
+                if (!usou_registo) ler_string("ID do cliente: ", id, sizeof(id));
                 nProdutos = ler_int("Numero de produtos: ");
-                resultado = inserir_novo_cliente(&sm, &hash, id, nProdutos);
+                resultado = inserir_novo_cliente(&sm, &hash, id, nome, nProdutos);
                 if (resultado == INSERIR_CLIENTE_DUPLICADO) printf("Cliente ja existe em espera.\n");
                 else if (resultado == INSERIR_CLIENTE_INVALIDO) printf("Dados invalidos: indique um ID nao vazio e numero de produtos superior a zero.\n");
                 else if (resultado == INSERIR_CLIENTE_SEM_CAIXA) printf("Nao existe nenhuma caixa disponivel para receber o cliente.\n");
@@ -172,6 +199,7 @@ int main(void) {
     mostrar_estatisticas_finais(&sm);
     supermercado_destruir(&sm, &hash);
     funcionarios_destruir(funcionarios);
+    registo_destruir(registo);
     fechar_log(logFile);
     return 0;
 }

@@ -11,6 +11,7 @@
 #define CONFIG_FILE "data/Configuracao.txt"
 #define DATA_FILE "data/Dados.txt"
 #define FUNCIONARIOS_FILE "data/funcionarios.txt"
+#define CLIENTES_FILE     "Clientes.txt"
 #define LOG_FILE "output/historico_utilizador.csv"
 #define ESTATISTICAS_FILE "output/estatisticas.csv"
 #define HISTORICO_CAIXAS_FILE "output/historico_caixas.csv"
@@ -37,7 +38,7 @@ void supermercado_destruir(Supermercado *sm, HashClientes *hash);
 int carregar_dados_iniciais(const char *filename, Supermercado *sm, HashClientes *hash);
 void mostrar_estado_supermercado(const Supermercado *sm);
 void mostrar_caixa(const Caixa *caixa);
-int inserir_novo_cliente(Supermercado *sm, HashClientes *hash, const char *id, int nProdutos);
+int inserir_novo_cliente(Supermercado *sm, HashClientes *hash, const char *id, const char *nome, int nProdutos);
 int mover_cliente_caixa(Supermercado *sm, HashClientes *hash, const char *id, int novaCaixa);
 void avancar_simulacao(Supermercado *sm, HashClientes *hash, int passos);
 void verificar_politica_caixas(Supermercado *sm, HashClientes *hash);

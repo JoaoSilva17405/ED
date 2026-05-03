@@ -1,11 +1,13 @@
 #include "customer.h"
 
-Cliente *criar_cliente(const char *id, int nProdutos, int instanteAtual, int caixaAtual, const Configuracao *cfg) {
+Cliente *criar_cliente(const char *id, const char *nome, int nProdutos, int instanteAtual, int caixaAtual, const Configuracao *cfg) {
     Cliente *cliente = (Cliente *)malloc(sizeof(Cliente));
     if (!cliente) return NULL;
 
     strncpy(cliente->id, id, sizeof(cliente->id) - 1);
     cliente->id[sizeof(cliente->id) - 1] = '\0';
+    strncpy(cliente->nome, nome ? nome : "", sizeof(cliente->nome) - 1);
+    cliente->nome[sizeof(cliente->nome) - 1] = '\0';
     cliente->nProdutos = nProdutos;
     cliente->produtos = gerar_produtos_aleatorios(nProdutos, cfg);
     if (!cliente->produtos) {
@@ -54,11 +56,14 @@ float oferecer_um_produto(Cliente *cliente) {
 
 void mostrar_cliente(const Cliente *cliente) {
     if (!cliente) return;
-    printf("Cliente %s | produtos=%d | caixa=%d | espera=%d | oferecidos=%d | valor_oferecido=%.2f\n",
-           cliente->id,
-           cliente->nProdutos,
-           cliente->caixaAtual + 1,
-           cliente->tempoEsperaTotal,
-           cliente->produtosOferecidos,
-           cliente->valorOferecido);
+    if (cliente->nome[0])
+        printf("Cliente %s (%s) | produtos=%d | caixa=%d | espera=%d | oferecidos=%d | valor_oferecido=%.2f\n",
+               cliente->id, cliente->nome,
+               cliente->nProdutos, cliente->caixaAtual + 1,
+               cliente->tempoEsperaTotal, cliente->produtosOferecidos, cliente->valorOferecido);
+    else
+        printf("Cliente %s | produtos=%d | caixa=%d | espera=%d | oferecidos=%d | valor_oferecido=%.2f\n",
+               cliente->id,
+               cliente->nProdutos, cliente->caixaAtual + 1,
+               cliente->tempoEsperaTotal, cliente->produtosOferecidos, cliente->valorOferecido);
 }

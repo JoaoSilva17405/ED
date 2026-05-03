@@ -169,7 +169,7 @@ int carregar_dados_iniciais(const char *filename, Supermercado *sm, HashClientes
             if (sscanf(linha, "%31[^:]: %d", id, &nProdutos) == 2 || sscanf(linha, "%31[^:]:%d", id, &nProdutos) == 2) {
                 Cliente *cliente;
                 trim(id);
-                cliente = criar_cliente(id, nProdutos, sm->instanteAtual, caixaAtual, &sm->cfg);
+                cliente = criar_cliente(id, "", nProdutos, sm->instanteAtual, caixaAtual, &sm->cfg);
                 if (cliente) {
                     if (fila_inserir(&sm->caixas[caixaAtual].fila, cliente) && hash_inserir(hash, cliente, caixaAtual)) {
                         clientesLidosParaCaixa++;
@@ -209,7 +209,7 @@ void mostrar_estado_supermercado(const Supermercado *sm) {
     for (i = 0; i < sm->cfg.nCaixas; ++i) mostrar_caixa(&sm->caixas[i]);
 }
 
-int inserir_novo_cliente(Supermercado *sm, HashClientes *hash, const char *idOriginal, int nProdutos) {
+int inserir_novo_cliente(Supermercado *sm, HashClientes *hash, const char *idOriginal, const char *nome, int nProdutos) {
     int destino;
     char detalhes[128];
     char id[MAX_ID];
@@ -225,7 +225,7 @@ int inserir_novo_cliente(Supermercado *sm, HashClientes *hash, const char *idOri
     destino = encontrar_caixa_para_novo_cliente(sm);
     if (destino == -1) return INSERIR_CLIENTE_SEM_CAIXA;
 
-    cliente = criar_cliente(id, nProdutos, sm->instanteAtual, destino, &sm->cfg);
+    cliente = criar_cliente(id, nome ? nome : "", nProdutos, sm->instanteAtual, destino, &sm->cfg);
     if (!cliente) return INSERIR_CLIENTE_MEMORIA;
     if (!fila_inserir(&sm->caixas[destino].fila, cliente)) {
         destruir_cliente(cliente);

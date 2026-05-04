@@ -8,6 +8,7 @@
 #include "logging.h"
 #include "employee.h"
 #include "catalog.h"
+#include "client_registry.h"
 
 #define CONFIG_FILE "data/Configuracao.txt"
 #define DATA_FILE "data/Dados.txt"
@@ -51,6 +52,7 @@ int fechar_caixa_imediata_manual(Supermercado *sm, HashClientes *hash, int idCai
 void pesquisar_cliente(Supermercado *sm, HashClientes *hash, const char *id);
 size_t memoria_utilizada(const Supermercado *sm, const HashClientes *hash);
 size_t memoria_desperdicada(const Supermercado *sm, const HashClientes *hash);
+int guardar_snapshot(const char *filename, const Supermercado *sm, const RegistoClientes *registo);
 int guardar_estatisticas_csv(const char *filename, const Supermercado *sm);
 int guardar_historico_caixas_csv(const char *filename, const Supermercado *sm);
 void mostrar_estatisticas_finais(const Supermercado *sm);

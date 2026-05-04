@@ -1,23 +1,34 @@
-6
-Caixa1:1
-1
-P1: 5
-Caixa2:1
-5
-P21: 3
-P22: 1
-P23: 3
-P24: 2
-P25: 4
-Caixa3:1
-2
-P31: 3
-P32: 2
-Caixa4:0
-0
-Caixa5:1
-2
-P51: 3
-P52: 6
-Caixa6:0
-0
+INSTANTE 0
+CAIXAS 6
+CAIXA 1 ABERTA Bruna Cristina Pedreiro Silva
+  EM_ATENDIMENTO 609140 Carla Aguiar Pires tempo_restante=5 entrada=0 inicio=0
+    PRODUTO 10001 Azeitona Verde Retalhada com Ervas [marcaB] 300 gr 3.00 12.0 4 false
+    PRODUTO 10002 Croutons Pao Tostado [marcaB] 150 gr 1.69 6.2 3 false
+  FILA 2
+    CLIENTE 814991 Ricardo Andrade Matos entrada=0
+      PRODUTO 10003 Azeitona Mista Britada com Ervas Aromaticas [marcaB] 300 gr 2.00 14.6 2 false
+      PRODUTO 10005 Mini Picos Azeite [marcaB] 300 gr 1.45 6.7 2 false
+    CLIENTE 843818 Eduardo Carneiro Castro entrada=0
+      PRODUTO 10004 Azeitona Mista Retalhada com Ervas Aromaticas [marcaB] 800 gr 4.00 5.0 2 false
+      PRODUTO 10001 Azeitona Verde Retalhada com Ervas [marcaB] 300 gr 3.00 12.0 4 false
+      PRODUTO 10002 Croutons Pao Tostado [marcaB] 150 gr 1.69 6.2 3 false
+CAIXA 2 ABERTA David Jose Baltazar
+  FILA 1
+    CLIENTE 647507 Cristiana Eanes Baptista entrada=0
+      PRODUTO 10003 Azeitona Mista Britada com Ervas Aromaticas [marcaB] 300 gr 2.00 14.6 2 false
+      PRODUTO 10005 Mini Picos Azeite [marcaB] 300 gr 1.45 6.7 2 false
+CAIXA 3 ABERTA Maria Raquel Marques Oliveira
+  FILA 1
+    CLIENTE 684741 Marisa Calado Barbosa entrada=0
+      PRODUTO 10001 Azeitona Verde Retalhada com Ervas [marcaB] 300 gr 3.00 12.0 4 false
+      PRODUTO 10004 Azeitona Mista Retalhada com Ervas Aromaticas [marcaB] 800 gr 4.00 5.0 2 false
+CAIXA 4 FECHADA Jessica Jeremias Freitas
+  FILA 0
+CAIXA 5 ABERTA Sónia Saraiva Nunes
+  FILA 1
+    CLIENTE 945973 Leonor Leal Moreira entrada=0
+      PRODUTO 10002 Croutons Pao Tostado [marcaB] 150 gr 1.69 6.2 3 false
+      PRODUTO 10003 Azeitona Mista Britada com Ervas Aromaticas [marcaB] 300 gr 2.00 14.6 2 false
+      PRODUTO 10005 Mini Picos Azeite [marcaB] 300 gr 1.45 6.7 2 false
+CAIXA 6 FECHADA Mariana dos Santos Almeida
+  FILA 0

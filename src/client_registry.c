@@ -76,6 +76,42 @@ EntradaCliente *registo_obter_aleatorio(const RegistoClientes *registo) {
     return &registo->lista[rand() % registo->tamanho];
 }
 
+int registo_adicionar(RegistoClientes *registo, const char *id, const char *nome, const char *filename) {
+    EntradaCliente *novo;
+    FILE *f;
+    int i;
+
+    if (!registo || !id || !nome) return 0;
+    if (strlen(id) != 6) return 0;
+    for (i = 0; i < 6; i++) {
+        if (!isdigit((unsigned char)id[i])) return 0;
+    }
+    if (nome[0] == '\0') return 0;
+
+    if (registo_pesquisar_id(registo, id)) return 1;
+
+    if (registo->tamanho == registo->capacidade) {
+        int nova = registo->capacidade + REG_GROWTH;
+        novo = (EntradaCliente *)realloc(registo->lista, sizeof(EntradaCliente) * nova);
+        if (!novo) return 0;
+        registo->lista = novo;
+        registo->capacidade = nova;
+    }
+
+    strncpy(registo->lista[registo->tamanho].id,   id,   MAX_ID   - 1);
+    registo->lista[registo->tamanho].id[MAX_ID - 1] = '\0';
+    strncpy(registo->lista[registo->tamanho].nome, nome, MAX_NOME - 1);
+    registo->lista[registo->tamanho].nome[MAX_NOME - 1] = '\0';
+    registo->tamanho++;
+
+    if (!filename) return 1;
+    f = fopen(filename, "a");
+    if (!f) return 0;
+    fprintf(f, "%s\t%s\n", id, nome);
+    fclose(f);
+    return 1;
+}
+
 void registo_destruir(RegistoClientes *registo) {
     if (!registo) return;
     free(registo->lista);

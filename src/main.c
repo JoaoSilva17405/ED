@@ -20,6 +20,7 @@ static void menu_principal(void) {
     printf("11. Mostrar memoria desperdicada\n");
     printf("12. Mostrar estatisticas finais\n");
     printf("13. Gravar estatisticas CSV\n");
+    printf("14. Gravar snapshot do estado atual\n");
     printf("0. Sair\n");
 }
 
@@ -130,8 +131,14 @@ int main(void) {
                             nome[sizeof(nome) - 1] = '\0';
                         }
                     }
+                    /* ID desconhecido: pedir nome e registar */
                     if (nome[0] == '\0') {
                         ler_string("Nome do cliente: ", nome, sizeof(nome));
+                        if (nome[0] != '\0' && registo) {
+                            if (!registo_adicionar(registo, id, nome, CLIENTES_FILE)) {
+                                printf("Aviso: ID invalido ou nao foi possivel registar o cliente.\n");
+                            }
+                        }
                     }
                     if (catalogo) {
                         /* loop interativo de selecao de produtos */
@@ -256,6 +263,14 @@ int main(void) {
                     printf("Nao foi possivel gerar os ficheiros CSV em output/.\n");
                 }
                 break;
+            case 14:
+                log_acao(logFile, "MENU", "Gravar snapshot");
+                if (guardar_snapshot(DATA_FILE, &sm, registo)) {
+                    printf("Snapshot gravado em %s.\n", DATA_FILE);
+                } else {
+                    printf("Nao foi possivel gravar o snapshot.\n");
+                }
+                break;
             case 0:
                 log_acao(logFile, "MENU", "Sair");
                 break;
@@ -264,6 +279,7 @@ int main(void) {
         }
     } while (opcao != 0);
 
+    guardar_snapshot(DATA_FILE, &sm, registo);
     guardar_estatisticas_csv(ESTATISTICAS_FILE, &sm);
     guardar_historico_caixas_csv(HISTORICO_CAIXAS_FILE, &sm);
     mostrar_estatisticas_finais(&sm);

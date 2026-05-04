@@ -1,5 +1,6 @@
 #include "store.h"
 #include "utils.h"
+#include "client_registry.h"
 
 static int contar_caixas_abertas(const Supermercado *sm) {
     int i, total = 0;
@@ -120,17 +121,294 @@ void supermercado_destruir(Supermercado *sm, HashClientes *hash) {
     if (hash) hash_destruir(hash);
 }
 
-int carregar_dados_iniciais(const char *filename, Supermercado *sm, HashClientes *hash) {
-    FILE *f = fopen(filename, "r");
-    char linha[MAX_LINE];
-    int caixasNoFicheiro = -1;
-    int caixasDeclaradas = 0;
-    int caixaAtual = -1;
-    int clientesEsperados = -1;
-    int clientesLidosParaCaixa = 0;
+/* ---- snapshot helpers ---- */
 
+static int tokenizar_linha(char *str, char **tokens, int max) {
+    int n = 0;
+    char *p = str;
+    while (*p && n < max) {
+        while (*p == ' ') p++;
+        if (*p == '\0') break;
+        tokens[n++] = p;
+        while (*p && *p != ' ') p++;
+        if (*p) *p++ = '\0';
+    }
+    return n;
+}
+
+static int parse_produto_linha(char *linha, Produto *prod) {
+    char buf[MAX_LINE];
+    char *tokens[64];
+    int n, k;
+    char nome_buf[MAX_NOME];
+
+    strncpy(buf, linha, sizeof(buf) - 1);
+    buf[sizeof(buf) - 1] = '\0';
+    n = tokenizar_linha(buf, tokens, 64);
+    /* need: PRODUTO id nome(>=1) preco stock tempo oferecido → min 7 */
+    if (n < 7) return 0;
+
+    prod->id            = atoi(tokens[1]);
+    prod->preco         = (float)atof(tokens[n - 4]);
+    prod->stock         = (float)atof(tokens[n - 3]);
+    prod->tempoPassagem = atoi(tokens[n - 2]);
+    prod->oferecido     = (strcmp(tokens[n - 1], "true") == 0);
+
+    nome_buf[0] = '\0';
+    for (k = 2; k < n - 4; k++) {
+        if (k > 2) strncat(nome_buf, " ", MAX_NOME - 1 - strlen(nome_buf));
+        strncat(nome_buf, tokens[k], MAX_NOME - 1 - strlen(nome_buf));
+    }
+    strncpy(prod->nome, nome_buf, MAX_NOME - 1);
+    prod->nome[MAX_NOME - 1] = '\0';
+    return 1;
+}
+
+static int parse_id_nome_ate(const char *p, const char *marcador,
+                              char *id_out, char *nome_out) {
+    const char *mar_pos;
+    const char *id_end;
+    size_t id_len, nome_len;
+
+    while (*p == ' ') p++;
+    mar_pos = strstr(p, marcador);
+    if (!mar_pos) return 0;
+
+    id_end = strchr(p, ' ');
+    if (!id_end || id_end >= mar_pos) return 0;
+    id_len = (size_t)(id_end - p);
+    if (id_len >= MAX_ID) id_len = MAX_ID - 1;
+    strncpy(id_out, p, id_len);
+    id_out[id_len] = '\0';
+
+    p = id_end + 1;
+    nome_len = (size_t)(mar_pos - p);
+    if (nome_len >= MAX_NOME) nome_len = MAX_NOME - 1;
+    strncpy(nome_out, p, nome_len);
+    nome_out[nome_len] = '\0';
+    while (nome_len > 0 && (nome_out[nome_len - 1] == ' ' || nome_out[nome_len - 1] == '\t')) {
+        nome_out[--nome_len] = '\0';
+    }
+    return 1;
+}
+
+static void guardar_produtos_snapshot(FILE *f, const Cliente *c, int indent) {
+    int p;
+    for (p = 0; p < c->nProdutos; p++) {
+        fprintf(f, "%*sPRODUTO %d %s %.2f %.1f %d %s\n",
+                indent, "",
+                c->produtos[p].id, c->produtos[p].nome,
+                c->produtos[p].preco, c->produtos[p].stock,
+                c->produtos[p].tempoPassagem,
+                c->produtos[p].oferecido ? "true" : "false");
+    }
+}
+
+int guardar_snapshot(const char *filename, const Supermercado *sm, const RegistoClientes *registo) {
+    FILE *f;
+    int i;
+
+    if (!filename || !sm) return 0;
+    f = fopen(filename, "w");
     if (!f) return 0;
 
+    fprintf(f, "INSTANTE %d\n", sm->instanteAtual);
+    fprintf(f, "CAIXAS %d\n", sm->cfg.nCaixas);
+
+    for (i = 0; i < sm->cfg.nCaixas; i++) {
+        const Caixa *cx = &sm->caixas[i];
+        const char *estado_str = (cx->estado == CAIXA_ABERTA)    ? "ABERTA" :
+                                  (cx->estado == CAIXA_A_FECHAR) ? "A_FECHAR" : "FECHADA";
+        const NoFila *no;
+
+        fprintf(f, "CAIXA %d %s %s\n", i + 1, estado_str, cx->operador);
+
+        if (cx->emAtendimento) {
+            const Cliente *c = cx->emAtendimento;
+            const char *nome_c = c->nome[0] ? c->nome : "Desconhecido";
+            if (registo) {
+                const EntradaCliente *e = registo_pesquisar_id(registo, c->id);
+                if (e) nome_c = e->nome;
+            }
+            fprintf(f, "  EM_ATENDIMENTO %s %s tempo_restante=%d entrada=%d inicio=%d\n",
+                    c->id, nome_c, cx->tempoRestanteAtendimento,
+                    c->instanteEntradaFila, c->instanteInicioAtendimento);
+            guardar_produtos_snapshot(f, c, 4);
+        }
+
+        fprintf(f, "  FILA %d\n", cx->fila.tamanho);
+        no = cx->fila.cabeca;
+        while (no) {
+            const Cliente *c = no->cliente;
+            const char *nome_c = c->nome[0] ? c->nome : "Desconhecido";
+            if (registo) {
+                const EntradaCliente *e = registo_pesquisar_id(registo, c->id);
+                if (e) nome_c = e->nome;
+            }
+            fprintf(f, "    CLIENTE %s %s entrada=%d\n", c->id, nome_c, c->instanteEntradaFila);
+            guardar_produtos_snapshot(f, c, 6);
+            no = no->seguinte;
+        }
+    }
+
+    fclose(f);
+    return 1;
+}
+
+/* ---- finalize a pending client being assembled from snapshot lines ---- */
+
+static void finalizar_cliente_pendente(
+    Supermercado *sm, HashClientes *hash,
+    const char *pid, const char *pnome,
+    int pEntrada, int pInicio,
+    bool pEmAtendimento, int pTempoRestante,
+    Produto *prods, int nProds, int caixaAtual)
+{
+    Produto *prods_copy;
+    Cliente *cliente;
+    int j;
+
+    if (pid[0] == '\0' || nProds == 0) return;
+    if (caixaAtual < 0 || caixaAtual >= sm->cfg.nCaixas) return;
+
+    prods_copy = (Produto *)malloc(sizeof(Produto) * nProds);
+    if (!prods_copy) return;
+    for (j = 0; j < nProds; j++) prods_copy[j] = prods[j];
+
+    cliente = criar_cliente(pid, pnome, nProds, pEntrada, caixaAtual, prods_copy);
+    if (!cliente) return;
+    cliente->instanteInicioAtendimento = pInicio;
+
+    if (pEmAtendimento) {
+        cliente->estavaEmAtendimento = true;
+        sm->caixas[caixaAtual].emAtendimento = cliente;
+        sm->caixas[caixaAtual].tempoRestanteAtendimento = pTempoRestante;
+    } else {
+        if (!fila_inserir(&sm->caixas[caixaAtual].fila, cliente)) {
+            destruir_cliente(cliente);
+            return;
+        }
+        if (hash) hash_inserir(hash, cliente, caixaAtual);
+    }
+}
+
+/* ---- new format parser ---- */
+
+static int carregar_formato_novo(FILE *f, Supermercado *sm, HashClientes *hash, char *primeira_linha) {
+    char linha[MAX_LINE];
+    int caixaAtual = -1;
+    char pendingId[MAX_ID]   = {0};
+    char pendingNome[MAX_NOME] = {0};
+    int pendingEntrada = 0, pendingInicio = -1, pendingTempoRestante = 0;
+    bool pendingEmAtendimento = false;
+    Produto prods[512];
+    int nProds = 0;
+
+    /* parse first line (already read before detecting format) */
+    sscanf(primeira_linha, "INSTANTE %d", &sm->instanteAtual);
+
+    while (fgets(linha, sizeof(linha), f)) {
+        char *p = linha;
+        trim(linha);
+        if (linha[0] == '\0') continue;
+
+        /* strip leading spaces for keyword detection */
+        while (*p == ' ') p++;
+
+        if (strncmp(p, "PRODUTO", 7) == 0) {
+            if (nProds < 512) {
+                parse_produto_linha(p, &prods[nProds]);
+                nProds++;
+            }
+            continue;
+        }
+
+        /* any non-PRODUTO line finalizes the pending client */
+        if (pendingId[0] != '\0') {
+            finalizar_cliente_pendente(sm, hash,
+                pendingId, pendingNome, pendingEntrada, pendingInicio,
+                pendingEmAtendimento, pendingTempoRestante,
+                prods, nProds, caixaAtual);
+            pendingId[0] = '\0';
+            nProds = 0;
+            pendingEmAtendimento = false;
+        }
+
+        if (strncmp(p, "CAIXAS", 6) == 0) {
+            continue;
+        } else if (strncmp(p, "CAIXA", 5) == 0) {
+            int num;
+            char estado_str[16], operador[MAX_OPERADOR];
+            if (sscanf(p, "CAIXA %d %15s %63[^\n]", &num, estado_str, operador) >= 2) {
+                caixaAtual = num - 1;
+                if (caixaAtual >= 0 && caixaAtual < sm->cfg.nCaixas) {
+                    if (strcmp(estado_str, "ABERTA") == 0)
+                        sm->caixas[caixaAtual].estado = CAIXA_ABERTA;
+                    else if (strcmp(estado_str, "A_FECHAR") == 0)
+                        sm->caixas[caixaAtual].estado = CAIXA_A_FECHAR;
+                    else
+                        sm->caixas[caixaAtual].estado = CAIXA_FECHADA;
+                }
+            }
+        } else if (strncmp(p, "EM_ATENDIMENTO", 14) == 0) {
+            const char *rest = p + 14;
+            char id[MAX_ID], nome[MAX_NOME];
+            int tr = 0, ent = 0, ini = -1;
+            const char *tr_pos;
+            while (*rest == ' ') rest++;
+            if (parse_id_nome_ate(rest, "tempo_restante=", id, nome)) {
+                tr_pos = strstr(rest, "tempo_restante=");
+                sscanf(tr_pos, "tempo_restante=%d entrada=%d inicio=%d", &tr, &ent, &ini);
+                strncpy(pendingId, id, MAX_ID - 1);
+                strncpy(pendingNome, nome, MAX_NOME - 1);
+                pendingEntrada = ent;
+                pendingInicio  = ini;
+                pendingTempoRestante = tr;
+                pendingEmAtendimento = true;
+                nProds = 0;
+            }
+        } else if (strncmp(p, "CLIENTE", 7) == 0) {
+            const char *rest = p + 7;
+            char id[MAX_ID], nome[MAX_NOME];
+            int ent = 0;
+            const char *ent_pos;
+            while (*rest == ' ') rest++;
+            if (parse_id_nome_ate(rest, "entrada=", id, nome)) {
+                ent_pos = strstr(rest, "entrada=");
+                sscanf(ent_pos, "entrada=%d", &ent);
+                strncpy(pendingId, id, MAX_ID - 1);
+                strncpy(pendingNome, nome, MAX_NOME - 1);
+                pendingEntrada = ent;
+                pendingInicio  = -1;
+                pendingTempoRestante = 0;
+                pendingEmAtendimento = false;
+                nProds = 0;
+            }
+        } else if (strncmp(p, "INSTANTE", 8) == 0) {
+            sscanf(p, "INSTANTE %d", &sm->instanteAtual);
+        }
+        /* FILA N: just informational, ignore count */
+    }
+
+    /* finalize last pending client */
+    if (pendingId[0] != '\0') {
+        finalizar_cliente_pendente(sm, hash,
+            pendingId, pendingNome, pendingEntrada, pendingInicio,
+            pendingEmAtendimento, pendingTempoRestante,
+            prods, nProds, caixaAtual);
+    }
+    return 1;
+}
+
+/* ---- old format fallback ---- */
+
+static int carregar_formato_antigo(const char *filename, Supermercado *sm, HashClientes *hash) {
+    FILE *f = fopen(filename, "r");
+    char linha[MAX_LINE];
+    int caixasNoFicheiro = -1, caixasDeclaradas = 0;
+    int caixaAtual = -1, clientesEsperados = -1, clientesLidos = 0;
+
+    if (!f) return 0;
     while (fgets(linha, sizeof(linha), f)) {
         char *coment;
         trim(linha);
@@ -141,44 +419,37 @@ int carregar_dados_iniciais(const char *filename, Supermercado *sm, HashClientes
         if (linha[0] == '\0') continue;
 
         if (caixasNoFicheiro == -1 && isdigit((unsigned char)linha[0])) {
-            caixasNoFicheiro = atoi(linha);
-            continue;
+            caixasNoFicheiro = atoi(linha); continue;
         }
-
         if (strncmp(linha, "Caixa", 5) == 0) {
             int numero, ativa;
-            if (sscanf(linha, "Caixa%d : %d", &numero, &ativa) == 2 || sscanf(linha, "Caixa%d:%d", &numero, &ativa) == 2) {
+            if (sscanf(linha, "Caixa%d : %d", &numero, &ativa) == 2 ||
+                sscanf(linha, "Caixa%d:%d",   &numero, &ativa) == 2) {
                 caixaAtual = numero - 1;
-                clientesEsperados = -1;
-                clientesLidosParaCaixa = 0;
-                caixasDeclaradas++;
-                if (caixaAtual >= 0 && caixaAtual < sm->cfg.nCaixas) {
+                clientesEsperados = -1; clientesLidos = 0; caixasDeclaradas++;
+                if (caixaAtual >= 0 && caixaAtual < sm->cfg.nCaixas)
                     sm->caixas[caixaAtual].estado = ativa ? CAIXA_ABERTA : CAIXA_FECHADA;
-                }
             }
             continue;
         }
-
         if (caixaAtual >= 0 && clientesEsperados == -1 && isdigit((unsigned char)linha[0])) {
-            clientesEsperados = atoi(linha);
-            continue;
+            clientesEsperados = atoi(linha); continue;
         }
-
-        if (caixaAtual >= 0 && clientesEsperados >= 0 && clientesLidosParaCaixa < clientesEsperados) {
-            char id[MAX_ID];
-            int nProdutos;
-            if (sscanf(linha, "%31[^:]: %d", id, &nProdutos) == 2 || sscanf(linha, "%31[^:]:%d", id, &nProdutos) == 2) {
+        if (caixaAtual >= 0 && clientesEsperados >= 0 && clientesLidos < clientesEsperados) {
+            char id[MAX_ID]; int nProdutos;
+            if (sscanf(linha, "%31[^:]: %d", id, &nProdutos) == 2 ||
+                sscanf(linha, "%31[^:]:%d",  id, &nProdutos) == 2) {
+                Produto *prods;
                 Cliente *cliente;
                 trim(id);
-                {
-                    Produto *prods = sm->catalogo
-                        ? catalog_obter_produtos_aleatorios(sm->catalogo, nProdutos, &sm->cfg)
-                        : gerar_produtos_aleatorios(nProdutos, &sm->cfg);
-                    cliente = criar_cliente(id, "", nProdutos, sm->instanteAtual, caixaAtual, prods);
-                }
+                prods = sm->catalogo
+                    ? catalog_obter_produtos_aleatorios(sm->catalogo, nProdutos, &sm->cfg)
+                    : gerar_produtos_aleatorios(nProdutos, &sm->cfg);
+                cliente = criar_cliente(id, "", nProdutos, sm->instanteAtual, caixaAtual, prods);
                 if (cliente) {
-                    if (fila_inserir(&sm->caixas[caixaAtual].fila, cliente) && hash_inserir(hash, cliente, caixaAtual)) {
-                        clientesLidosParaCaixa++;
+                    if (fila_inserir(&sm->caixas[caixaAtual].fila, cliente) &&
+                        hash_inserir(hash, cliente, caixaAtual)) {
+                        clientesLidos++;
                     } else {
                         fila_remover_por_id(&sm->caixas[caixaAtual].fila, cliente->id);
                         destruir_cliente(cliente);
@@ -187,13 +458,30 @@ int carregar_dados_iniciais(const char *filename, Supermercado *sm, HashClientes
             }
         }
     }
-
     fclose(f);
-    if (caixasNoFicheiro >= 0 && caixasDeclaradas != caixasNoFicheiro) {
-        printf("Aviso: o ficheiro declarava %d caixas, mas foram lidas %d.\n", caixasNoFicheiro, caixasDeclaradas);
-    }
-    log_acao(sm->logFile, "CARREGAR_DADOS", filename);
+    if (caixasNoFicheiro >= 0 && caixasDeclaradas != caixasNoFicheiro)
+        printf("Aviso: o ficheiro declarava %d caixas, mas foram lidas %d.\n",
+               caixasNoFicheiro, caixasDeclaradas);
     return 1;
+}
+
+int carregar_dados_iniciais(const char *filename, Supermercado *sm, HashClientes *hash) {
+    FILE *f = fopen(filename, "r");
+    char primeira[MAX_LINE];
+
+    if (!f) return 0;
+    if (!fgets(primeira, sizeof(primeira), f)) { fclose(f); return 1; }
+    trim(primeira);
+
+    if (strncmp(primeira, "INSTANTE", 8) == 0) {
+        int r = carregar_formato_novo(f, sm, hash, primeira);
+        fclose(f);
+        log_acao(sm->logFile, "CARREGAR_DADOS", filename);
+        return r;
+    }
+    fclose(f);
+    log_acao(sm->logFile, "CARREGAR_DADOS", filename);
+    return carregar_formato_antigo(filename, sm, hash);
 }
 
 void mostrar_caixa(const Caixa *caixa) {

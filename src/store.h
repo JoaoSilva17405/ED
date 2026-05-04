@@ -35,6 +35,8 @@ typedef struct {
     float totalValorOferecido;
     long somaTemposEspera;
     FILE *logFile;
+    int instanteUltimoFecho;
+    int instanteUltimaAberturaManual;
 } Supermercado;
 
 int supermercado_init(Supermercado *sm, const Configuracao *cfg, FILE *logFile, ListaFuncionarios *funcionarios, CatalogoProdutos *catalogo);

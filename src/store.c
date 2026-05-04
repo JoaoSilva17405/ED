@@ -18,10 +18,26 @@ static int contar_caixas_realmente_abertas(const Supermercado *sm) {
     return total;
 }
 
-static int total_clientes_em_filas(const Supermercado *sm) {
+static int total_filas_apenas_abertas(const Supermercado *sm) {
     int i, total = 0;
-    for (i = 0; i < sm->cfg.nCaixas; ++i) total += sm->caixas[i].fila.tamanho;
+    for (i = 0; i < sm->cfg.nCaixas; ++i) {
+        if (sm->caixas[i].estado == CAIXA_ABERTA)
+            total += sm->caixas[i].fila.tamanho;
+    }
     return total;
+}
+
+static int encontrar_caixa_menos_fila_aberta(const Supermercado *sm) {
+    int i, idx = -1, min = 0;
+    for (i = 0; i < sm->cfg.nCaixas; ++i) {
+        const Caixa *c = &sm->caixas[i];
+        if (c->estado != CAIXA_ABERTA) continue;
+        if (idx == -1 || c->fila.tamanho < min) {
+            idx = i;
+            min = c->fila.tamanho;
+        }
+    }
+    return idx;
 }
 
 static int encontrar_caixa_menos_pessoas_aberta(const Supermercado *sm, int ignorar) {
@@ -98,6 +114,8 @@ int supermercado_init(Supermercado *sm, const Configuracao *cfg, FILE *logFile, 
     sm->totalValorOferecido = 0.0f;
     sm->somaTemposEspera = 0;
     sm->logFile = logFile;
+    sm->instanteUltimoFecho = -1;
+    sm->instanteUltimaAberturaManual = -4;
     for (i = 0; i < cfg->nCaixas; ++i) {
         char operador[MAX_OPERADOR];
         Funcionario *func = funcionarios ? funcionarios_obter_aleatorio(funcionarios) : NULL;
@@ -639,42 +657,50 @@ void avancar_simulacao(Supermercado *sm, HashClientes *hash, int passos) {
 }
 
 void verificar_politica_caixas(Supermercado *sm, HashClientes *hash) {
-    int abertas = contar_caixas_abertas(sm);
-    int totalFilas = total_clientes_em_filas(sm);
+    int abertas = contar_caixas_realmente_abertas(sm);
+    int totalFilas = total_filas_apenas_abertas(sm);
     double media;
+    char detalhes[128];
 
+    (void)hash;
     if (abertas <= 0) return;
     media = (double)totalFilas / abertas;
 
-    if (media > sm->cfg.maxFila) {
+    if (media > sm->cfg.maxFila && sm->instanteAtual != sm->instanteUltimoFecho) {
         int i;
         for (i = 0; i < sm->cfg.nCaixas; ++i) {
             if (sm->caixas[i].estado == CAIXA_FECHADA) {
                 sm->caixas[i].estado = CAIXA_ABERTA;
-                log_acao(sm->logFile, "ABRIR_CAIXA_AUTO", sm->caixas[i].operador);
+                snprintf(detalhes, sizeof(detalhes),
+                         "Caixa %d aberta (media=%.2f > MAX_FILA=%d)",
+                         i + 1, media, sm->cfg.maxFila);
+                log_acao(sm->logFile, "ABRIR_CAIXA_AUTO", detalhes);
                 return;
             }
         }
+        return;
     }
 
-    if (media < sm->cfg.minFila && contar_caixas_realmente_abertas(sm) > 1) {
-        int idx = encontrar_caixa_menos_pessoas_aberta(sm, -1);
-        if (idx != -1 && sm->caixas[idx].fila.tamanho == 0 && sm->caixas[idx].emAtendimento == NULL) {
-            sm->caixas[idx].estado = CAIXA_FECHADA;
-            log_acao(sm->logFile, "FECHAR_CAIXA_AUTO", sm->caixas[idx].operador);
-        } else if (idx != -1) {
+    if (media < sm->cfg.minFila
+        && abertas > 1
+        && sm->instanteAtual > sm->instanteUltimaAberturaManual + 3) {
+        int idx = encontrar_caixa_menos_fila_aberta(sm);
+        if (idx != -1) {
             sm->caixas[idx].estado = CAIXA_A_FECHAR;
-            log_acao(sm->logFile, "FECHAR_CAIXA_SUAVE_AUTO", sm->caixas[idx].operador);
+            sm->instanteUltimoFecho = sm->instanteAtual;
+            snprintf(detalhes, sizeof(detalhes),
+                     "Caixa %d a fechar (media=%.2f < MIN_FILA=%d)",
+                     idx + 1, media, sm->cfg.minFila);
+            log_acao(sm->logFile, "FECHAR_CAIXA_SUAVE_AUTO", detalhes);
         }
     }
-
-    (void)hash;
 }
 
 int abrir_caixa_manual(Supermercado *sm, int idCaixa) {
     char detalhes[64];
     if (idCaixa < 0 || idCaixa >= sm->cfg.nCaixas) return 0;
     sm->caixas[idCaixa].estado = CAIXA_ABERTA;
+    sm->instanteUltimaAberturaManual = sm->instanteAtual;
     snprintf(detalhes, sizeof(detalhes), "Caixa %d aberta manualmente", idCaixa + 1);
     log_acao(sm->logFile, "ABRIR_CAIXA_MANUAL", detalhes);
     return 1;

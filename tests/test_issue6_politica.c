@@ -275,6 +275,30 @@ static void test_politica_apos_fecho_definitivo(void) {
     supermercado_destruir(&sm, NULL);
 }
 
+/* ── Cycle 15: snapshot roundtrip preserva os dois novos campos ───────── */
+#define TMP_SNAP6 "output/test_issue6_snap_tmp.txt"
+static void test_snapshot_roundtrip_politica(void) {
+    Supermercado sm  = make_sm(2, 7, 1);
+    Supermercado sm2 = make_sm(2, 7, 1);
+    HashClientes h2;
+    hash_init(&h2);
+
+    sm.instanteUltimoFecho          = 17;
+    sm.instanteUltimaAberturaManual = 42;
+    sm.caixas[0].estado = CAIXA_ABERTA;
+
+    guardar_snapshot(TMP_SNAP6, &sm, NULL);
+    carregar_dados_iniciais(TMP_SNAP6, &sm2, &h2);
+
+    CHECK(sm2.instanteUltimoFecho == 17,
+          "snapshot roundtrip: instanteUltimoFecho restaurado");
+    CHECK(sm2.instanteUltimaAberturaManual == 42,
+          "snapshot roundtrip: instanteUltimaAberturaManual restaurado");
+
+    supermercado_destruir(&sm,  NULL);
+    supermercado_destruir(&sm2, &h2);
+}
+
 /* ── runner ──────────────────────────────────────────────────────────── */
 int main(void) {
     printf("=== Issue #6: Politica Automatica de Caixas ===\n\n");
@@ -294,6 +318,7 @@ int main(void) {
     test_protecao_manual_expira();
     test_empate_fecha_menor_id();
     test_politica_apos_fecho_definitivo();
+    test_snapshot_roundtrip_politica();
 
     printf("\n=== Resultados: %d PASS, %d FAIL ===\n", pass_count, fail_count);
     return fail_count > 0 ? 1 : 0;

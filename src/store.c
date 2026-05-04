@@ -231,6 +231,8 @@ int guardar_snapshot(const char *filename, const Supermercado *sm, const Registo
     if (!f) return 0;
 
     fprintf(f, "INSTANTE %d\n", sm->instanteAtual);
+    fprintf(f, "ULTIMO_FECHO %d\n", sm->instanteUltimoFecho);
+    fprintf(f, "ULTIMA_ABERTURA_MANUAL %d\n", sm->instanteUltimaAberturaManual);
     fprintf(f, "CAIXAS %d\n", sm->cfg.nCaixas);
 
     for (i = 0; i < sm->cfg.nCaixas; i++) {
@@ -402,6 +404,10 @@ static int carregar_formato_novo(FILE *f, Supermercado *sm, HashClientes *hash, 
                 pendingEmAtendimento = false;
                 nProds = 0;
             }
+        } else if (strncmp(p, "ULTIMO_FECHO", 12) == 0) {
+            sscanf(p, "ULTIMO_FECHO %d", &sm->instanteUltimoFecho);
+        } else if (strncmp(p, "ULTIMA_ABERTURA_MANUAL", 22) == 0) {
+            sscanf(p, "ULTIMA_ABERTURA_MANUAL %d", &sm->instanteUltimaAberturaManual);
         } else if (strncmp(p, "INSTANTE", 8) == 0) {
             sscanf(p, "INSTANTE %d", &sm->instanteAtual);
         }

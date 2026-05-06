@@ -142,7 +142,11 @@ int main(void) {
                     /* ID desconhecido: pedir nome e registar */
                     if (nome[0] == '\0') {
                         ler_string("Nome do cliente: ", nome, sizeof(nome));
-                        if (nome[0] != '\0' && registo) {
+                        if (nome[0] == '\0') {
+                            printf("Nome invalido. O cliente nao foi inserido.\n");
+                            break;
+                        }
+                        if (registo) {
                             if (!registo_adicionar(registo, id, nome, CLIENTES_FILE)) {
                                 printf("Aviso: nao foi possivel guardar no registo de clientes.\n");
                             }

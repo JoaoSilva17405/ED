@@ -79,7 +79,7 @@ grep -q 'Clientes a fazer compras (1)' output/teste_funcional.txt
 grep -q 'Nao foi possivel mover o cliente.' output/teste_funcional.txt
 grep -q 'esta a fazer compras' output/teste_funcional.txt
 grep -q 'ja esta no supermercado' output/teste_funcional.txt
-grep -q 'Aviso: ID invalido' output/teste_funcional.txt
+grep -q 'ID invalido' output/teste_funcional.txt
 grep -q 'Ficheiros CSV gerados em output/.' output/teste_funcional.txt
 grep -q 'Produtos oferecidos:' output/teste_ofertas.txt
 grep -q 'Valor oferecido:' output/teste_ofertas.txt

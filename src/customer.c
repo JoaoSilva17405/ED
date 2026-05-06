@@ -59,14 +59,27 @@ float oferecer_um_produto(Cliente *cliente) {
 
 void mostrar_cliente(const Cliente *cliente) {
     if (!cliente) return;
-    if (cliente->nome[0])
-        printf("Cliente %s (%s) | produtos=%d | caixa=%d | espera=%d | oferecidos=%d | valor_oferecido=%.2f\n",
-               cliente->id, cliente->nome,
-               cliente->nProdutos, cliente->caixaAtual + 1,
-               cliente->tempoEsperaTotal, cliente->produtosOferecidos, cliente->valorOferecido);
-    else
-        printf("Cliente %s | produtos=%d | caixa=%d | espera=%d | oferecidos=%d | valor_oferecido=%.2f\n",
-               cliente->id,
-               cliente->nProdutos, cliente->caixaAtual + 1,
-               cliente->tempoEsperaTotal, cliente->produtosOferecidos, cliente->valorOferecido);
+    if (cliente->caixaAtual >= 0) {
+        if (cliente->nome[0])
+            printf("Cliente %s (%s) | produtos=%d | caixa=%d | espera=%d | oferecidos=%d | valor_oferecido=%.2f\n",
+                   cliente->id, cliente->nome,
+                   cliente->nProdutos, cliente->caixaAtual + 1,
+                   cliente->tempoEsperaTotal, cliente->produtosOferecidos, cliente->valorOferecido);
+        else
+            printf("Cliente %s | produtos=%d | caixa=%d | espera=%d | oferecidos=%d | valor_oferecido=%.2f\n",
+                   cliente->id,
+                   cliente->nProdutos, cliente->caixaAtual + 1,
+                   cliente->tempoEsperaTotal, cliente->produtosOferecidos, cliente->valorOferecido);
+    } else {
+        if (cliente->nome[0])
+            printf("Cliente %s (%s) | produtos=%d | (em compras) | espera=%d | oferecidos=%d | valor_oferecido=%.2f\n",
+                   cliente->id, cliente->nome,
+                   cliente->nProdutos,
+                   cliente->tempoEsperaTotal, cliente->produtosOferecidos, cliente->valorOferecido);
+        else
+            printf("Cliente %s | produtos=%d | (em compras) | espera=%d | oferecidos=%d | valor_oferecido=%.2f\n",
+                   cliente->id,
+                   cliente->nProdutos,
+                   cliente->tempoEsperaTotal, cliente->produtosOferecidos, cliente->valorOferecido);
+    }
 }

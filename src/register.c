@@ -4,6 +4,7 @@ void caixa_init(Caixa *caixa, int id, const char *operador, EstadoCaixa estado) 
     caixa->id = id;
     strncpy(caixa->operador, operador, sizeof(caixa->operador) - 1);
     caixa->operador[sizeof(caixa->operador) - 1] = '\0';
+    caixa->ultimoOperador[0] = '\0';
     caixa->estado = estado;
     fila_init(&caixa->fila);
     caixa->emAtendimento = NULL;
@@ -45,8 +46,8 @@ void caixa_adicionar_historico(Caixa *caixa, Cliente *cliente) {
 
 void caixa_listar_historico(const Caixa *caixa) {
     int i;
-    if (caixa->operador[0] != '\0')
-        printf("Historico da caixa %d (%s):\n", caixa->id + 1, caixa->operador);
+    if (caixa->ultimoOperador[0] != '\0')
+        printf("Historico da caixa %d (%s):\n", caixa->id + 1, caixa->ultimoOperador);
     else
         printf("Historico da caixa %d:\n", caixa->id + 1);
     if (caixa->nHistorico == 0) {

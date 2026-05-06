@@ -201,7 +201,13 @@ int main(void) {
             case 7: {
                 int caixa = ler_int("Caixa a fechar suavemente (1..N): ") - 1;
                 log_acao(logFile, "MENU", "Fechar caixa suavemente");
-                printf(fechar_caixa_suave_manual(&sm, caixa) ? "Caixa marcada para fecho suave.\n" : "Nao foi possivel marcar a caixa.\n");
+                if (!fechar_caixa_suave_manual(&sm, caixa)) {
+                    printf("Nao foi possivel marcar a caixa.\n");
+                } else if (sm.caixas[caixa].estado == CAIXA_FECHADA) {
+                    printf("Caixa estava vazia e foi fechada imediatamente.\n");
+                } else {
+                    printf("Caixa marcada para fecho suave.\n");
+                }
                 break;
             }
             case 8: {

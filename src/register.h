@@ -7,6 +7,7 @@
 typedef struct {
     int id;
     char operador[MAX_OPERADOR];
+    char ultimoOperador[MAX_OPERADOR];
     EstadoCaixa estado;
     FilaClientes fila;
     Cliente *emAtendimento;

@@ -357,6 +357,7 @@ static void finalizar_cliente_pendente(
         cliente->estavaEmAtendimento = true;
         sm->caixas[caixaAtual].emAtendimento = cliente;
         sm->caixas[caixaAtual].tempoRestanteAtendimento = pTempoRestante;
+        if (hash) hash_inserir(hash, cliente, caixaAtual);
     } else {
         if (!fila_inserir(&sm->caixas[caixaAtual].fila, cliente)) {
             destruir_cliente(cliente);
@@ -442,15 +443,22 @@ static int carregar_formato_novo(FILE *f, Supermercado *sm, HashClientes *hash, 
         } else if (strncmp(p, "CAIXA", 5) == 0) {
             int num;
             char estado_str[16], operador[MAX_OPERADOR];
-            if (sscanf(p, "CAIXA %d %15s %63[^\n]", &num, estado_str, operador) >= 2) {
-                caixaAtual = num - 1;
-                if (caixaAtual >= 0 && caixaAtual < sm->cfg.nCaixas) {
-                    if (strcmp(estado_str, "ABERTA") == 0)
-                        sm->caixas[caixaAtual].estado = CAIXA_ABERTA;
-                    else if (strcmp(estado_str, "A_FECHAR") == 0)
-                        sm->caixas[caixaAtual].estado = CAIXA_A_FECHAR;
-                    else
-                        sm->caixas[caixaAtual].estado = CAIXA_FECHADA;
+            {
+                int n_parsed = sscanf(p, "CAIXA %d %15s %63[^\n]", &num, estado_str, operador);
+                if (n_parsed >= 2) {
+                    caixaAtual = num - 1;
+                    if (caixaAtual >= 0 && caixaAtual < sm->cfg.nCaixas) {
+                        if (strcmp(estado_str, "ABERTA") == 0)
+                            sm->caixas[caixaAtual].estado = CAIXA_ABERTA;
+                        else if (strcmp(estado_str, "A_FECHAR") == 0)
+                            sm->caixas[caixaAtual].estado = CAIXA_A_FECHAR;
+                        else
+                            sm->caixas[caixaAtual].estado = CAIXA_FECHADA;
+                        if (n_parsed >= 3) {
+                            strncpy(sm->caixas[caixaAtual].operador, operador, MAX_OPERADOR - 1);
+                            sm->caixas[caixaAtual].operador[MAX_OPERADOR - 1] = '\0';
+                        }
+                    }
                 }
             }
         } else if (strncmp(p, "EM_ATENDIMENTO", 14) == 0) {
@@ -602,7 +610,8 @@ void mostrar_caixa(const Caixa *caixa) {
     const char *estado = (caixa->estado == CAIXA_ABERTA) ? "ABERTA" : (caixa->estado == CAIXA_A_FECHAR ? "A_FECHAR" : "FECHADA");
     printf("\nCaixa %d | operador=%s | estado=%s\n", caixa->id + 1, caixa->operador, estado);
     if (caixa->emAtendimento) {
-        printf("  Em atendimento: %s | tempo_restante=%d\n", caixa->emAtendimento->id, caixa->tempoRestanteAtendimento);
+        printf("  Em atendimento (tempo_restante=%d):\n", caixa->tempoRestanteAtendimento);
+        mostrar_cliente(caixa->emAtendimento);
     } else {
         printf("  Em atendimento: (nenhum)\n");
     }
@@ -794,6 +803,26 @@ void avancar_simulacao(Supermercado *sm, HashClientes *hash, int passos) {
             }
         }
 
+        for (i = 0; i < sm->cfg.nCaixas; ++i) {
+            Cliente *c = sm->caixas[i].emAtendimento;
+            if (c && !c->oferecimentoFeito && c->instanteEntradaFila >= 0) {
+                int espera = sm->instanteAtual - c->instanteEntradaFila;
+                if (espera > sm->cfg.maxEspera) {
+                    float valor = oferecer_um_produto(c);
+                    if (valor > 0.0f) {
+                        char det[160];
+                        c->oferecimentoFeito = true;
+                        sm->totalProdutosOferecidos++;
+                        sm->totalValorOferecido += valor;
+                        snprintf(det, sizeof(det),
+                                 "%s ultrapassou MAX_ESPERA em atendimento caixa %d | produto_oferecido=%.2f",
+                                 c->id, i + 1, valor);
+                        log_acao(sm->logFile, "PRODUTO_OFERECIDO", det);
+                    }
+                }
+            }
+        }
+
         verificar_politica_caixas(sm, hash);
     }
 }
@@ -834,6 +863,12 @@ void verificar_politica_caixas(Supermercado *sm, HashClientes *hash) {
                      "Caixa %d a fechar (media=%.2f < MIN_FILA=%d)",
                      idx + 1, media, sm->cfg.minFila);
             log_acao(sm->logFile, "FECHAR_CAIXA_SUAVE_AUTO", detalhes);
+            if (sm->caixas[idx].fila.tamanho == 0 && sm->caixas[idx].emAtendimento == NULL) {
+                sm->caixas[idx].estado = CAIXA_FECHADA;
+                snprintf(detalhes, sizeof(detalhes),
+                         "Caixa %d fechada imediatamente (ja estava vazia)", idx + 1);
+                log_acao(sm->logFile, "FECHAR_CAIXA_IMEDIATA_AUTO", detalhes);
+            }
         }
     }
 }
@@ -938,7 +973,11 @@ size_t memoria_utilizada(const Supermercado *sm, const HashClientes *hash) {
             }
         }
     }
-    total += sizeof(HashClientes);
+    total += sizeof(Cliente *) * sm->capClientesEmLoja;
+    for (i = 0; i < sm->nClientesEmLoja; ++i) {
+        total += sizeof(Cliente);
+        total += sizeof(Produto) * sm->clientesEmLoja[i]->nProdutos;
+    }
     total += hash_memoria(hash);
     return total;
 }

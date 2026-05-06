@@ -109,6 +109,10 @@ int main(void) {
                 NoHash *existente;
                 log_acao(logFile, "MENU", "Inserir novo cliente");
                 ler_string("ID do cliente: ", id, sizeof(id));
+                if (!id_valido(id)) {
+                    printf("Erro: ID invalido (deve ter exactamente 6 digitos).\n");
+                    break;
+                }
                 existente = hash_pesquisar(&hash, id);
                 if (existente) {
                     if (existente->idCaixa < 0) {
@@ -140,7 +144,7 @@ int main(void) {
                         ler_string("Nome do cliente: ", nome, sizeof(nome));
                         if (nome[0] != '\0' && registo) {
                             if (!registo_adicionar(registo, id, nome, CLIENTES_FILE)) {
-                                printf("Aviso: ID invalido ou nao foi possivel registar o cliente.\n");
+                                printf("Aviso: nao foi possivel guardar no registo de clientes.\n");
                             }
                         }
                     }

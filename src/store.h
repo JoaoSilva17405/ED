@@ -41,6 +41,7 @@ typedef struct {
     FILE *logFile;
     int instanteUltimoFecho;
     int instanteUltimaAberturaManual;
+    ListaFuncionarios *funcionarios;
 } Supermercado;
 
 int supermercado_init(Supermercado *sm, const Configuracao *cfg, FILE *logFile, ListaFuncionarios *funcionarios, CatalogoProdutos *catalogo);

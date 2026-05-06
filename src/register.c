@@ -45,7 +45,10 @@ void caixa_adicionar_historico(Caixa *caixa, Cliente *cliente) {
 
 void caixa_listar_historico(const Caixa *caixa) {
     int i;
-    printf("Historico da caixa %d (%s):\n", caixa->id + 1, caixa->operador);
+    if (caixa->operador[0] != '\0')
+        printf("Historico da caixa %d (%s):\n", caixa->id + 1, caixa->operador);
+    else
+        printf("Historico da caixa %d:\n", caixa->id + 1);
     if (caixa->nHistorico == 0) {
         printf("  (sem clientes atendidos)\n");
         return;

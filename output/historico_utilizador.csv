@@ -1,17 +1,34 @@
 timestamp,acao,detalhes
-2026-05-03 18:39:31,CARREGAR_DADOS,data/Dados.txt
-2026-05-03 18:39:31,MENU,Avancar simulacao
-2026-05-03 18:39:31,FECHAR_CAIXA_SUAVE_AUTO,Patricia Cabral Henriques Bras
-2026-05-03 18:39:31,FECHAR_CAIXA_SUAVE_AUTO,Fabio Nabais Ferreira
-2026-05-03 18:39:31,FECHAR_CAIXA_SUAVE_AUTO,Maria Soraia Bullitta Portela
-2026-05-03 18:39:31,CLIENTE_ATENDIDO,P31 atendido na caixa 3 | espera=1 | oferecidos=0 | valor_oferecido=0.00
-2026-05-03 18:39:31,CLIENTE_ATENDIDO,P21 atendido na caixa 2 | espera=1 | oferecidos=0 | valor_oferecido=0.00
-2026-05-03 18:39:31,CLIENTE_ATENDIDO,P51 atendido na caixa 5 | espera=1 | oferecidos=0 | valor_oferecido=0.00
-2026-05-03 18:39:31,CLIENTE_ATENDIDO,P32 atendido na caixa 3 | espera=12 | oferecidos=0 | valor_oferecido=0.00
-2026-05-03 18:39:31,CLIENTE_ATENDIDO,P22 atendido na caixa 2 | espera=13 | oferecidos=0 | valor_oferecido=0.00
-2026-05-03 18:39:31,CLIENTE_ATENDIDO,P1 atendido na caixa 1 | espera=1 | oferecidos=0 | valor_oferecido=0.00
-2026-05-03 18:39:31,CLIENTE_ATENDIDO,P23 atendido na caixa 2 | espera=17 | oferecidos=0 | valor_oferecido=0.00
-2026-05-03 18:39:31,CLIENTE_ATENDIDO,P52 atendido na caixa 5 | espera=14 | oferecidos=0 | valor_oferecido=0.00
-2026-05-03 18:39:31,CLIENTE_ATENDIDO,P24 atendido na caixa 2 | espera=31 | oferecidos=0 | valor_oferecido=0.00
-2026-05-03 18:39:31,MENU,Mostrar estatisticas finais
-2026-05-03 18:39:31,MENU,Sair
+2026-05-06 21:17:49,CARREGAR_DADOS,data/Dados.txt
+2026-05-06 21:17:52,MENU,Mostrar estado das caixas
+2026-05-06 21:18:53,MENU,Inserir novo cliente
+2026-05-06 21:18:57,MENU,Inserir novo cliente
+2026-05-06 21:19:05,ENTRADA_LOJA,888888 entrou no supermercado com 10 produtos (compra: 266s)
+2026-05-06 21:19:07,MENU,Mostrar estado das caixas
+2026-05-06 21:19:24,MENU,Abrir caixa manualmente
+2026-05-06 21:19:24,ABRIR_CAIXA_MANUAL,Caixa 3 aberta manualmente
+2026-05-06 21:19:43,MENU,Inserir novo cliente
+2026-05-06 21:20:06,MENU,Inserir novo cliente
+2026-05-06 21:20:21,ENTRADA_LOJA,111111 entrou no supermercado com 12 produtos (compra: 220s)
+2026-05-06 21:20:23,MENU,Inserir novo cliente
+2026-05-06 21:20:31,ENTRADA_LOJA,111112 entrou no supermercado com 11 produtos (compra: 254s)
+2026-05-06 21:20:34,MENU,Inserir novo cliente
+2026-05-06 21:20:44,ENTRADA_LOJA,111113 entrou no supermercado com 17 produtos (compra: 394s)
+2026-05-06 21:20:53,MENU,Pesquisar cliente
+2026-05-06 21:21:34,MENU,Avancar simulacao
+2026-05-06 21:21:34,FECHAR_CAIXA_SUAVE_AUTO,Caixa 1 a fechar (media=0.00 < MIN_FILA=3)
+2026-05-06 21:21:36,MENU,Mostrar estado das caixas
+2026-05-06 21:22:05,MENU,Avancar simulacao
+2026-05-06 21:22:06,MENU,Mostrar estado das caixas
+2026-05-06 21:22:19,MENU,Avancar simulacao
+2026-05-06 21:22:19,CLIENTE_ATENDIDO,12345 atendido na caixa 1 | espera=0 | oferecidos=0 | valor_oferecido=0.00
+2026-05-06 21:22:19,ENTRAR_FILA,111111 terminou compras e entrou na fila da caixa 3
+2026-05-06 21:22:19,CLIENTE_ATENDIDO,111111 atendido na caixa 3 | espera=0 | oferecidos=0 | valor_oferecido=0.00
+2026-05-06 21:22:19,ENTRAR_FILA,111112 terminou compras e entrou na fila da caixa 3
+2026-05-06 21:22:19,ENTRAR_FILA,99999 terminou compras e entrou na fila da caixa 3
+2026-05-06 21:22:19,ENTRAR_FILA,888888 terminou compras e entrou na fila da caixa 3
+2026-05-06 21:22:19,CLIENTE_ATENDIDO,111112 atendido na caixa 3 | espera=0 | oferecidos=0 | valor_oferecido=0.00
+2026-05-06 21:22:19,CLIENTE_ATENDIDO,99999 atendido na caixa 3 | espera=14 | oferecidos=0 | valor_oferecido=0.00
+2026-05-06 21:22:22,MENU,Mostrar estado das caixas
+2026-05-06 21:25:05,MENU,Mudar cliente de caixa
+2026-05-06 21:25:23,MENU,Mostrar estado das caixas

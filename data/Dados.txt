@@ -1,34 +1,65 @@
-INSTANTE 0
+INSTANTE 1368
+ULTIMO_FECHO 3
+ULTIMA_ABERTURA_MANUAL -4
+EM_LOJA 2
+  LOJA_CLIENTE 17405 joao silva entrada_loja=1368 tempo_compra=497
+    PRODUTO 11013 Segredos Tomilho e Limão Frasco [Margão] 43 gr 2.29 22 2 false
+    PRODUTO 40499 Esfregão Salva Unhas Ergonómico Verde [Scotch-Brite] 1 un 1.99 32 4 false
+    PRODUTO 11263 Espargos Brancos [Cimarrom] 330 gr 2.99 5 2 false
+    PRODUTO 11723 Pão Indiano Chupati ou Roti [Lekha] 270 gr 2.99 6 2 false
+    PRODUTO 10896 Molho Salsa Mexicana [Old El Paso] 190 gr 2.89 3 2 false
+    PRODUTO 31988 Creme Cellular Cushion 3 em 1 Tom Escuro [Nivea] 15 gr 19.99 9 3 false
+    PRODUTO 10752 Bombons Chocolate Leite Recheio Leite e Avelãs Schoko-Bons [Ki 1.00 70 4 false
+    PRODUTO 20323 Champô Ultra Suave Monoi e Neroli [Garnier] 250 ml 3.59 10 4 false
+    PRODUTO 40873 Bloco Sanitário Color Blue [Harpic] 1 un 1.44 15 3 false
+    PRODUTO 10943 Mel [João Franco] 120 gr 5.39 6 3 false
+    PRODUTO 10399 Gomas Funky Mix [Haribo] 100 gr 0.99 2 2 false
+    PRODUTO 10900 Milho Inteiro Baby [Cock Brand] 425 gr 2.59 84 2 false
+    PRODUTO 20535 Creme Fixador sem Sabor [Polident] 40 gr 6.89 13 3 false
+    PRODUTO 11309 Vinagre Vinho com Limão [Gallo] 250 ml 1.99 27 5 false
+    PRODUTO 10502 Bolachas Maria [Triunfo] 200 gr 0.89 82 2 false
+    PRODUTO 20034 Esponja Vegetal de Massagem [marcaB] 1 un 1.89 3 2 false
+    PRODUTO 14194 Chocolate Leite [Milka] 100 gr 1.49 3 2 false
+    PRODUTO 50402 Avelã C/Casca [marcaBé!] 250 Gr 2.89 19 2 false
+    PRODUTO 12614 Café Sóluvel Gold [Nescafé] 25 un 2.99 54 5 false
+    PRODUTO 11147 Doce Morango [Casa Da Prisca] 250 gr 2.85 32 2 false
+  LOJA_CLIENTE 99999 alberto caeiro entrada_loja=1368 tempo_compra=266
+    PRODUTO 50303 Farinheira [marcaBé!] 170 Gr 1.39 16 4 false
+    PRODUTO 50502 Melão (Meloa) Galia Kg # [marcaBé!] 1.29 22 2 false
+    PRODUTO 50161 Centro Presunto Reserva S/Osso Limpo Cura [marcaBé!] 9M Kg 14.99 38 2 false
+    PRODUTO 11491 Polpa de Maracujá [Koala] 565 gr 3.99 2 4 false
+    PRODUTO 12027 Tosta Integral [Diatosta] 225 gr 0.99 19 2 false
+    PRODUTO 50001 Aletria [marcaBé!] 500 Gr 0.65 22 3 false
+    PRODUTO 21785 Champô Elvive Phytoclear Anti-Caspa Cabelos Sensíveis [L´or� 5.99 28 3 false
+    PRODUTO 11866 Chupa Lollies [Chupa Chups] 175 gr 1.99 82 5 false
+    PRODUTO 11295 Doce Pêssego sem Adição Açúcar [St. Dalfour] 284 gr 3.49 20 2 false
+    PRODUTO 50306 Farinheira [marcaBé!] 170 G 1.99 2 2 false
+    PRODUTO 50884 Tosta Integral Grill Bolsão [marcaBé!] 750 Gr 2.10 15 2 false
 CAIXAS 6
-CAIXA 1 ABERTA Bruna Cristina Pedreiro Silva
-  EM_ATENDIMENTO 609140 Carla Aguiar Pires tempo_restante=5 entrada=0 inicio=0
-    PRODUTO 10001 Azeitona Verde Retalhada com Ervas [marcaB] 300 gr 3.00 12.0 4 false
-    PRODUTO 10002 Croutons Pao Tostado [marcaB] 150 gr 1.69 6.2 3 false
-  FILA 2
-    CLIENTE 814991 Ricardo Andrade Matos entrada=0
-      PRODUTO 10003 Azeitona Mista Britada com Ervas Aromaticas [marcaB] 300 gr 2.00 14.6 2 false
-      PRODUTO 10005 Mini Picos Azeite [marcaB] 300 gr 1.45 6.7 2 false
-    CLIENTE 843818 Eduardo Carneiro Castro entrada=0
-      PRODUTO 10004 Azeitona Mista Retalhada com Ervas Aromaticas [marcaB] 800 gr 4.00 5.0 2 false
-      PRODUTO 10001 Azeitona Verde Retalhada com Ervas [marcaB] 300 gr 3.00 12.0 4 false
-      PRODUTO 10002 Croutons Pao Tostado [marcaB] 150 gr 1.69 6.2 3 false
-CAIXA 2 ABERTA David Jose Baltazar
-  FILA 1
-    CLIENTE 647507 Cristiana Eanes Baptista entrada=0
-      PRODUTO 10003 Azeitona Mista Britada com Ervas Aromaticas [marcaB] 300 gr 2.00 14.6 2 false
-      PRODUTO 10005 Mini Picos Azeite [marcaB] 300 gr 1.45 6.7 2 false
-CAIXA 3 ABERTA Maria Raquel Marques Oliveira
-  FILA 1
-    CLIENTE 684741 Marisa Calado Barbosa entrada=0
-      PRODUTO 10001 Azeitona Verde Retalhada com Ervas [marcaB] 300 gr 3.00 12.0 4 false
-      PRODUTO 10004 Azeitona Mista Retalhada com Ervas Aromaticas [marcaB] 800 gr 4.00 5.0 2 false
-CAIXA 4 FECHADA Jessica Jeremias Freitas
+CAIXA 1 ABERTA Eva Filipa Guia Afonso
+  EM_ATENDIMENTO 12345 Nome Teste tempo_restante=40 entrada=1368 inicio=1368
+    PRODUTO 30063 Pente Afro [Franck Provost] 1 un 2.99 7 5 false
+    PRODUTO 50410 Banana Importada Kg # [marcaBé!] 0.84 13 2 false
+    PRODUTO 13295 Snack Chocolate KitKat Chunky [Nestlé] 4 x 40 gr 2.24 7 3 false
+    PRODUTO 11435 Caldo de Galinha 12 Cubos [marcaB] 120 gr 0.57 45 4 false
+    PRODUTO 21299 Champô Frescura Diária Men [Linic] 400 ml 5.99 42 2 false
+    PRODUTO 11852 Tosta Integral [Diatosta] 510 gr 2.25 12 4 false
+    PRODUTO 11992 Sal Líquido [Aosal] 200 ml 4.19 89 3 false
+    PRODUTO 20355 Pensos Higiénicos Ultra Normal com Alas [É marcaB] 18 un 0.99 8 2 false
+    PRODUTO 11048 Couve Branca Pouco Salgada [marcaB] 840 gr 2.35 18 2 false
+    PRODUTO 11357 Arroz Sushi [Saitaku] 500 gr 2.59 38 2 false
+    PRODUTO 30325 Cera Cabelo Style Brilho Fructis [Garnier] 75 ml 4.99 37 3 false
+    PRODUTO 13249 Pimenta Branca em Moinho [marcaB] 37 gr 2.44 11 2 false
+    PRODUTO 10961 Patê Frango [La Piara] 75 gr 1.54 2 2 false
+    PRODUTO 11138 Rebuçados com Recheio Mel [Penha] 100 gr 1.14 39 5 false
   FILA 0
-CAIXA 5 ABERTA Sónia Saraiva Nunes
-  FILA 1
-    CLIENTE 945973 Leonor Leal Moreira entrada=0
-      PRODUTO 10002 Croutons Pao Tostado [marcaB] 150 gr 1.69 6.2 3 false
-      PRODUTO 10003 Azeitona Mista Britada com Ervas Aromaticas [marcaB] 300 gr 2.00 14.6 2 false
-      PRODUTO 10005 Mini Picos Azeite [marcaB] 300 gr 1.45 6.7 2 false
-CAIXA 6 FECHADA Mariana dos Santos Almeida
+CAIXA 2 FECHADA -
+  FILA 0
+CAIXA 3 FECHADA -
+  FILA 0
+CAIXA 4 FECHADA -
+  FILA 0
+CAIXA 5 FECHADA -
+  FILA 0
+CAIXA 6 FECHADA -
   FILA 0

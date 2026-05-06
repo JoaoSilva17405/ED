@@ -32,6 +32,15 @@ void ler_string(const char *prompt, char *buffer, size_t size) {
     trim(buffer);
 }
 
+int id_valido(const char *id) {
+    int i;
+    if (!id || strlen(id) != 6) return 0;
+    for (i = 0; i < 6; i++) {
+        if (!isdigit((unsigned char)id[i])) return 0;
+    }
+    return 1;
+}
+
 int str_casecmp_local(const char *a, const char *b) {
     while (*a && *b) {
         int ca = tolower((unsigned char)*a);

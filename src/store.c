@@ -56,11 +56,22 @@ static int encontrar_caixa_menos_pessoas_aberta(const Supermercado *sm, int igno
     return idx;
 }
 
+static void caixa_atribuir_operador(Supermercado *sm, int idx) {
+    Funcionario *func = sm->funcionarios ? funcionarios_obter_aleatorio(sm->funcionarios) : NULL;
+    if (func) {
+        strncpy(sm->caixas[idx].operador, func->nome, MAX_OPERADOR - 1);
+        sm->caixas[idx].operador[MAX_OPERADOR - 1] = '\0';
+    } else {
+        snprintf(sm->caixas[idx].operador, MAX_OPERADOR, "Operador_%d", idx + 1);
+    }
+}
+
 static int abrir_primeira_caixa_fechada(Supermercado *sm) {
     int i;
     for (i = 0; i < sm->cfg.nCaixas; ++i) {
         if (sm->caixas[i].estado == CAIXA_FECHADA) {
             char detalhes[80];
+            caixa_atribuir_operador(sm, i);
             sm->caixas[i].estado = CAIXA_ABERTA;
             snprintf(detalhes, sizeof(detalhes), "Caixa %d aberta para receber novo cliente", i + 1);
             log_acao(sm->logFile, "ABRIR_CAIXA_CLIENTE", detalhes);
@@ -119,16 +130,9 @@ int supermercado_init(Supermercado *sm, const Configuracao *cfg, FILE *logFile, 
     sm->logFile = logFile;
     sm->instanteUltimoFecho = -1;
     sm->instanteUltimaAberturaManual = -4;
+    sm->funcionarios = funcionarios;
     for (i = 0; i < cfg->nCaixas; ++i) {
-        char operador[MAX_OPERADOR];
-        Funcionario *func = funcionarios ? funcionarios_obter_aleatorio(funcionarios) : NULL;
-        if (func) {
-            strncpy(operador, func->nome, sizeof(operador) - 1);
-            operador[sizeof(operador) - 1] = '\0';
-        } else {
-            snprintf(operador, sizeof(operador), "Operador_%d", i + 1);
-        }
-        caixa_init(&sm->caixas[i], i, operador, CAIXA_FECHADA);
+        caixa_init(&sm->caixas[i], i, "", CAIXA_FECHADA);
     }
     return 1;
 }
@@ -257,7 +261,8 @@ int guardar_snapshot(const char *filename, const Supermercado *sm, const Registo
                                   (cx->estado == CAIXA_A_FECHAR) ? "A_FECHAR" : "FECHADA";
         const NoFila *no;
 
-        fprintf(f, "CAIXA %d %s %s\n", i + 1, estado_str, cx->operador);
+        fprintf(f, "CAIXA %d %s %s\n", i + 1, estado_str,
+                cx->operador[0] != '\0' ? cx->operador : "-");
 
         if (cx->emAtendimento) {
             const Cliente *c = cx->emAtendimento;
@@ -454,7 +459,9 @@ static int carregar_formato_novo(FILE *f, Supermercado *sm, HashClientes *hash, 
                             sm->caixas[caixaAtual].estado = CAIXA_A_FECHAR;
                         else
                             sm->caixas[caixaAtual].estado = CAIXA_FECHADA;
-                        if (n_parsed >= 3) {
+                        if (n_parsed >= 3
+                                && sm->caixas[caixaAtual].estado != CAIXA_FECHADA
+                                && strcmp(operador, "-") != 0) {
                             strncpy(sm->caixas[caixaAtual].operador, operador, MAX_OPERADOR - 1);
                             sm->caixas[caixaAtual].operador[MAX_OPERADOR - 1] = '\0';
                         }
@@ -608,7 +615,10 @@ int carregar_dados_iniciais(const char *filename, Supermercado *sm, HashClientes
 
 void mostrar_caixa(const Caixa *caixa) {
     const char *estado = (caixa->estado == CAIXA_ABERTA) ? "ABERTA" : (caixa->estado == CAIXA_A_FECHAR ? "A_FECHAR" : "FECHADA");
-    printf("\nCaixa %d | operador=%s | estado=%s\n", caixa->id + 1, caixa->operador, estado);
+    if (caixa->operador[0] != '\0')
+        printf("\nCaixa %d | operador=%s | estado=%s\n", caixa->id + 1, caixa->operador, estado);
+    else
+        printf("\nCaixa %d | estado=%s\n", caixa->id + 1, estado);
     if (caixa->emAtendimento) {
         printf("  Em atendimento (tempo_restante=%d):\n", caixa->tempoRestanteAtendimento);
         mostrar_cliente(caixa->emAtendimento);
@@ -735,7 +745,10 @@ static void concluir_atendimento(Supermercado *sm, HashClientes *hash, Caixa *ca
     log_acao(sm->logFile, "CLIENTE_ATENDIDO", detalhes);
     caixa->emAtendimento = NULL;
     caixa->tempoRestanteAtendimento = 0;
-    if (caixa->estado == CAIXA_A_FECHAR && fila_vazia(&caixa->fila)) caixa->estado = CAIXA_FECHADA;
+    if (caixa->estado == CAIXA_A_FECHAR && fila_vazia(&caixa->fila)) {
+        caixa->estado = CAIXA_FECHADA;
+        caixa->operador[0] = '\0';
+    }
 }
 
 void avancar_simulacao(Supermercado *sm, HashClientes *hash, int passos) {
@@ -841,6 +854,7 @@ void verificar_politica_caixas(Supermercado *sm, HashClientes *hash) {
         int i;
         for (i = 0; i < sm->cfg.nCaixas; ++i) {
             if (sm->caixas[i].estado == CAIXA_FECHADA) {
+                caixa_atribuir_operador(sm, i);
                 sm->caixas[i].estado = CAIXA_ABERTA;
                 snprintf(detalhes, sizeof(detalhes),
                          "Caixa %d aberta (media=%.2f > MAX_FILA=%d)",
@@ -865,6 +879,7 @@ void verificar_politica_caixas(Supermercado *sm, HashClientes *hash) {
             log_acao(sm->logFile, "FECHAR_CAIXA_SUAVE_AUTO", detalhes);
             if (sm->caixas[idx].fila.tamanho == 0 && sm->caixas[idx].emAtendimento == NULL) {
                 sm->caixas[idx].estado = CAIXA_FECHADA;
+                sm->caixas[idx].operador[0] = '\0';
                 snprintf(detalhes, sizeof(detalhes),
                          "Caixa %d fechada imediatamente (ja estava vazia)", idx + 1);
                 log_acao(sm->logFile, "FECHAR_CAIXA_IMEDIATA_AUTO", detalhes);
@@ -876,6 +891,7 @@ void verificar_politica_caixas(Supermercado *sm, HashClientes *hash) {
 int abrir_caixa_manual(Supermercado *sm, int idCaixa) {
     char detalhes[64];
     if (idCaixa < 0 || idCaixa >= sm->cfg.nCaixas) return 0;
+    caixa_atribuir_operador(sm, idCaixa);
     sm->caixas[idCaixa].estado = CAIXA_ABERTA;
     sm->instanteUltimaAberturaManual = sm->instanteAtual;
     snprintf(detalhes, sizeof(detalhes), "Caixa %d aberta manualmente", idCaixa + 1);
@@ -915,6 +931,7 @@ int fechar_caixa_imediata_manual(Supermercado *sm, HashClientes *hash, int idCai
     }
     redistribuir_fila(sm, hash, idCaixa);
     sm->caixas[idCaixa].estado = CAIXA_FECHADA;
+    sm->caixas[idCaixa].operador[0] = '\0';
     snprintf(detalhes, sizeof(detalhes), "Caixa %d fechada de imediato com redistribuicao", idCaixa + 1);
     log_acao(sm->logFile, "FECHAR_CAIXA_IMEDIATA_MANUAL", detalhes);
     return 1;

@@ -79,13 +79,9 @@ EntradaCliente *registo_obter_aleatorio(const RegistoClientes *registo) {
 int registo_adicionar(RegistoClientes *registo, const char *id, const char *nome, const char *filename) {
     EntradaCliente *novo;
     FILE *f;
-    int i;
 
     if (!registo || !id || !nome) return 0;
-    if (strlen(id) != 6) return 0;
-    for (i = 0; i < 6; i++) {
-        if (!isdigit((unsigned char)id[i])) return 0;
-    }
+    if (!id_valido(id)) return 0;
     if (nome[0] == '\0') return 0;
 
     if (registo_pesquisar_id(registo, id)) return 1;

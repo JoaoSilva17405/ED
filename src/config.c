@@ -8,6 +8,8 @@ void config_default(Configuracao *cfg) {
     cfg->maxPreco = 40.0f;
     cfg->maxFila = 7;
     cfg->minFila = 3;
+    cfg->minProdutos = 1;
+    cfg->maxProdutos = 20;
 }
 
 int carregar_configuracao(const char *filename, Configuracao *cfg) {
@@ -31,6 +33,8 @@ int carregar_configuracao(const char *filename, Configuracao *cfg) {
         else if (strcmp(chave, "MAX_PRECO") == 0) cfg->maxPreco = valorFloat;
         else if (strcmp(chave, "MAX_FILA") == 0) cfg->maxFila = (int)valorFloat;
         else if (strcmp(chave, "MIN_FILA") == 0) cfg->minFila = (int)valorFloat;
+        else if (strcmp(chave, "MIN_PRODUTOS") == 0) cfg->minProdutos = (int)valorFloat;
+        else if (strcmp(chave, "MAX_PRODUTOS") == 0) cfg->maxProdutos = (int)valorFloat;
     }
 
     fclose(f);
@@ -45,4 +49,6 @@ void mostrar_configuracao(const Configuracao *cfg) {
     printf("MAX_PRECO: %.2f\n", cfg->maxPreco);
     printf("MAX_FILA: %d\n", cfg->maxFila);
     printf("MIN_FILA: %d\n", cfg->minFila);
+    printf("MIN_PRODUTOS: %d\n", cfg->minProdutos);
+    printf("MAX_PRODUTOS: %d\n", cfg->maxProdutos);
 }

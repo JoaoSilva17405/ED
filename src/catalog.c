@@ -26,7 +26,7 @@ CatalogoProdutos *catalog_carregar(const char *filename) {
         char *p1, *p2, *p3, *p4;
         int id;
         char nome[MAX_NOME];
-        float preco, stock, tempo;
+        float preco, tempoCompraF, tempo;
         Produto *novo;
 
         trim(linha);
@@ -52,7 +52,7 @@ CatalogoProdutos *catalog_carregar(const char *filename) {
         p4 = strchr(p3 + 1, '\t');
         if (!p4) continue;
         *p4 = '\0';
-        if (sscanf(p3 + 1, "%f", &stock) != 1) continue;
+        if (sscanf(p3 + 1, "%f", &tempoCompraF) != 1) continue;
 
         if (sscanf(p4 + 1, "%f", &tempo) != 1) continue;
 
@@ -68,7 +68,7 @@ CatalogoProdutos *catalog_carregar(const char *filename) {
         strncpy(cat->lista[cat->tamanho].nome, nome, MAX_NOME - 1);
         cat->lista[cat->tamanho].nome[MAX_NOME - 1] = '\0';
         cat->lista[cat->tamanho].preco         = preco;
-        cat->lista[cat->tamanho].stock         = stock;
+        cat->lista[cat->tamanho].tempoCompra   = tempo_para_int(tempoCompraF);
         cat->lista[cat->tamanho].tempoPassagem = tempo_para_int(tempo);
         cat->lista[cat->tamanho].oferecido     = false;
         cat->tamanho++;

@@ -16,7 +16,7 @@ Produto *gerar_produtos_aleatorios(int quantidade, const Configuracao *cfg) {
         snprintf(produtos[i].nome, sizeof(produtos[i].nome), "%s_%d", nomesBase[idx], i + 1);
         produtos[i].preco = 0.10f + ((float)(rand() % (int)(cfg->maxPreco * 100))) / 100.0f;
         if (produtos[i].preco > cfg->maxPreco) produtos[i].preco = cfg->maxPreco;
-        produtos[i].stock = 0.0f;
+        produtos[i].tempoCompra   = 2 + rand() % ((cfg->tempoAtendimentoProduto >= 2) ? (cfg->tempoAtendimentoProduto - 1) : 1);
         produtos[i].tempoPassagem = 2 + rand() % ((cfg->tempoAtendimentoProduto >= 2) ? (cfg->tempoAtendimentoProduto - 1) : 1);
         produtos[i].oferecido = false;
     }
@@ -27,6 +27,13 @@ int tempo_total_produtos(const Produto *produtos, int nProdutos) {
     int total = 0;
     int i;
     for (i = 0; i < nProdutos; ++i) total += produtos[i].tempoPassagem;
+    return total;
+}
+
+int tempo_compra_total_produtos(const Produto *produtos, int nProdutos) {
+    int total = 0, i;
+    if (!produtos || nProdutos <= 0) return 0;
+    for (i = 0; i < nProdutos; ++i) total += produtos[i].tempoCompra;
     return total;
 }
 

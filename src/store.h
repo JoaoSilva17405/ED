@@ -23,11 +23,15 @@
 #define INSERIR_CLIENTE_INVALIDO -2
 #define INSERIR_CLIENTE_SEM_CAIXA -3
 #define INSERIR_CLIENTE_MEMORIA -4
+#define INSERIR_CLIENTE_EM_COMPRAS -5
 
 typedef struct {
     Configuracao cfg;
     Caixa *caixas;
     CatalogoProdutos *catalogo;
+    Cliente **clientesEmLoja;
+    int nClientesEmLoja;
+    int capClientesEmLoja;
     int instanteAtual;
     int totalClientesAtendidos;
     int totalProdutosVendidos;

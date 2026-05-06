@@ -126,7 +126,7 @@ static Produto make_produto(int id, const char *nome, float preco, int tempo) {
     strncpy(p.nome, nome, MAX_NOME - 1);
     p.nome[MAX_NOME - 1] = '\0';
     p.preco = preco;
-    p.stock = 10.0f;
+    p.tempoCompra = 5;
     p.tempoPassagem = tempo;
     p.oferecido = false;
     return p;

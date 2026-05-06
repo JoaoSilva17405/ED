@@ -10,6 +10,8 @@ typedef struct {
     float maxPreco;
     int maxFila;
     int minFila;
+    int minProdutos;
+    int maxProdutos;
 } Configuracao;
 
 void config_default(Configuracao *cfg);

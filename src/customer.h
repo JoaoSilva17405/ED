@@ -10,6 +10,9 @@ typedef struct Cliente {
     char nome[MAX_NOME];
     int nProdutos;
     Produto *produtos;
+    int instanteEntradaLoja;
+    int tempoCompraTotal;
+    bool comprasTerminadas;
     int instanteEntradaFila;
     int instanteInicioAtendimento;
     int tempoEsperaTotal;

@@ -20,7 +20,7 @@ static Produto *make_produto(void) {
     strncpy(p->nome, "Teste", sizeof(p->nome) - 1);
     p->nome[sizeof(p->nome) - 1] = '\0';
     p->preco = 1.0f;
-    p->stock = 10.0f;
+    p->tempoCompra = 5;
     p->tempoPassagem = 1;
     p->oferecido = false;
     return p;

@@ -14,6 +14,9 @@ Cliente *criar_cliente(const char *id, const char *nome, int nProdutos, int inst
         free(cliente);
         return NULL;
     }
+    cliente->instanteEntradaLoja = instanteAtual;
+    cliente->tempoCompraTotal = 0;
+    cliente->comprasTerminadas = false;
     cliente->instanteEntradaFila = instanteAtual;
     cliente->instanteInicioAtendimento = -1;
     cliente->tempoEsperaTotal = 0;

@@ -8,13 +8,14 @@ typedef struct {
     int id;
     char nome[MAX_NOME];
     float preco;
-    float stock;
+    int tempoCompra;
     int tempoPassagem;
     bool oferecido;
 } Produto;
 
 Produto *gerar_produtos_aleatorios(int quantidade, const Configuracao *cfg);
 int tempo_total_produtos(const Produto *produtos, int nProdutos);
+int tempo_compra_total_produtos(const Produto *produtos, int nProdutos);
 float valor_total_produtos(const Produto *produtos, int nProdutos);
 void libertar_produtos(Produto *produtos);
 

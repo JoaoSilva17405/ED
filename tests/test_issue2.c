@@ -31,15 +31,33 @@ static void test_preco_sem_truncamento(void) {
     catalog_destruir(cat);
 }
 
-static void test_tempo_passagem_minimo_2(void) {
-    /* linha 5: tempoPassagem=0.8 -> ceil(0.8)=1 -> max(2,1)=2 */
+static void test_tempo_passagem_preservado_como_float(void) {
+    /* linha 2: tempoPassagem=2.3 -> deve ser preservado como float ~2.3 */
     CatalogoProdutos *cat = catalog_carregar("Produtos.txt");
-    int i, ok = 1;
+    if (!cat) { fail_count++; return; }
+    CHECK(cat->lista[1].tempoPassagem > 2.29f && cat->lista[1].tempoPassagem < 2.31f,
+          "tempoPassagem do produto 2 preservado como float (2.3)");
+    catalog_destruir(cat);
+}
+
+static void test_tempo_compra_preservado_como_float(void) {
+    /* linha 2: tempoCompra=6.2 -> deve ser preservado como float ~6.2 */
+    CatalogoProdutos *cat = catalog_carregar("Produtos.txt");
+    if (!cat) { fail_count++; return; }
+    CHECK(cat->lista[1].tempoCompra > 6.19f && cat->lista[1].tempoCompra < 6.21f,
+          "tempoCompra do produto 2 preservado como float (6.2)");
+    catalog_destruir(cat);
+}
+
+static void test_tempo_passagem_sem_minimo_artificial(void) {
+    /* catalogo tem produtos com tempoPassagem < 1 (ex: 0.4) — devem ser preservados */
+    CatalogoProdutos *cat = catalog_carregar("Produtos.txt");
+    int i, encontrou_abaixo_de_1 = 0;
     if (!cat) { fail_count++; return; }
     for (i = 0; i < cat->tamanho; i++) {
-        if (cat->lista[i].tempoPassagem < 2) { ok = 0; break; }
+        if (cat->lista[i].tempoPassagem < 1.0f) { encontrou_abaixo_de_1 = 1; break; }
     }
-    CHECK(ok, "tempoPassagem >= 2 para todos os produtos apos conversao");
+    CHECK(encontrou_abaixo_de_1, "tempoPassagem < 1.0 preservado do ficheiro (sem minimo artificial)");
     catalog_destruir(cat);
 }
 
@@ -55,9 +73,9 @@ static void test_obter_produtos_aleatorios(void) {
         int i, todos_reais = 1;
         for (i = 0; i < 5; i++) {
             if (prods[i].nome[0] == '\0') { todos_reais = 0; break; }
-            if (prods[i].tempoPassagem < 2) { todos_reais = 0; break; }
+            if (prods[i].tempoPassagem <= 0.0f) { todos_reais = 0; break; }
         }
-        CHECK(todos_reais, "5 produtos com nomes reais e tempoPassagem >= 2");
+        CHECK(todos_reais, "5 produtos com nomes reais e tempoPassagem > 0");
         free(prods);
     }
     catalog_destruir(cat);
@@ -73,7 +91,9 @@ int main(void) {
     test_carregar_nao_null();
     test_contagem();
     test_preco_sem_truncamento();
-    test_tempo_passagem_minimo_2();
+    test_tempo_passagem_preservado_como_float();
+    test_tempo_compra_preservado_como_float();
+    test_tempo_passagem_sem_minimo_artificial();
     test_obter_produtos_aleatorios();
     test_ficheiro_inexistente();
     printf("\n%d/%d testes passaram\n", pass_count, pass_count + fail_count);

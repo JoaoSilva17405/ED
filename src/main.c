@@ -85,6 +85,11 @@ int main(void) {
         fechar_log(logFile);
         return 1;
     }
+    {
+        char detalhes[128];
+        snprintf(detalhes, sizeof(detalhes), "snapshot=%s instante=%d", DATA_FILE, sm.instanteAtual);
+        log_acao(logFile, "INICIO_SESSAO", detalhes);
+    }
 
     EstadoSimulacao estadoSim = SIM_PAUSADA;
     int terminado = 0;
@@ -219,7 +224,7 @@ int main(void) {
                         Produto *carrinho = catalog_obter_produtos_aleatorios(catalogo, N, &sm.cfg);
                         if (carrinho) {
                             int resultado;
-                            int tempoCompra = tempo_compra_total_produtos(carrinho, N);
+                            float tempoCompra = tempo_compra_total_produtos(carrinho, N);
                             resultado = inserir_novo_cliente(&sm, &hash, id, nome, carrinho, N);
                             free(carrinho);
                             if (resultado == INSERIR_CLIENTE_INVALIDO)
@@ -229,7 +234,7 @@ int main(void) {
                             else if (resultado == INSERIR_CLIENTE_MEMORIA)
                                 printf("Nao foi possivel reservar memoria.\n");
                             else if (resultado == INSERIR_CLIENTE_EM_COMPRAS)
-                                printf("Cliente %s a fazer compras com %d produtos (%ds).\n", id, N, tempoCompra);
+                                printf("Cliente %s a fazer compras com %d produtos (%.1fs).\n", id, N, tempoCompra);
                             else
                                 printf("Nao foi possivel inserir cliente.\n");
                         } else {
@@ -327,6 +332,11 @@ int main(void) {
     guardar_estatisticas_csv(ESTATISTICAS_FILE, &sm);
     guardar_historico_caixas_csv(HISTORICO_CAIXAS_FILE, &sm);
     mostrar_estatisticas_finais(&sm);
+    {
+        char detalhes[128];
+        snprintf(detalhes, sizeof(detalhes), "clientes_atendidos=%d instante_final=%d", sm.totalClientesAtendidos, sm.instanteAtual);
+        log_acao(logFile, "FIM_SESSAO", detalhes);
+    }
     supermercado_destruir(&sm, &hash);
     funcionarios_destruir(funcionarios);
     registo_destruir(registo);

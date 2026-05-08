@@ -15,7 +15,7 @@ Cliente *criar_cliente(const char *id, const char *nome, int nProdutos, int inst
         return NULL;
     }
     cliente->instanteEntradaLoja = instanteAtual;
-    cliente->tempoCompraTotal = 0;
+    cliente->tempoCompraTotal = 0.0f;
     cliente->comprasTerminadas = false;
     cliente->instanteEntradaFila = instanteAtual;
     cliente->instanteInicioAtendimento = -1;
@@ -26,6 +26,7 @@ Cliente *criar_cliente(const char *id, const char *nome, int nProdutos, int inst
     cliente->estavaEmAtendimento = false;
     cliente->atendido = false;
     cliente->oferecimentoFeito = false;
+    cliente->operadorAtendimento[0] = '\0';
     return cliente;
 }
 
@@ -35,7 +36,7 @@ void destruir_cliente(Cliente *cliente) {
     free(cliente);
 }
 
-int cliente_tempo_atendimento(const Cliente *cliente) {
+float cliente_tempo_atendimento(const Cliente *cliente) {
     return tempo_total_produtos(cliente->produtos, cliente->nProdutos);
 }
 

@@ -46,6 +46,7 @@ typedef struct {
     int totalProdutosVendidos;
     int totalProdutosOferecidos;
     float totalValorOferecido;
+    float totalValorVendido;
     long somaTemposEspera;
     FILE *logFile;
     int instanteUltimoFecho;

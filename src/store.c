@@ -109,6 +109,7 @@ int supermercado_init(Supermercado *sm, const Configuracao *cfg, FILE *logFile, 
     sm->totalProdutosVendidos = 0;
     sm->totalProdutosOferecidos = 0;
     sm->totalValorOferecido = 0.0f;
+    sm->totalValorVendido = 0.0f;
     sm->somaTemposEspera = 0;
     sm->logFile = logFile;
     sm->instanteUltimoFecho = -1;
@@ -163,8 +164,8 @@ static int parse_produto_linha(char *linha, Produto *prod) {
 
     prod->id            = atoi(tokens[1]);
     prod->preco         = (float)atof(tokens[n - 4]);
-    prod->tempoCompra   = (int)atof(tokens[n - 3]);
-    prod->tempoPassagem = atoi(tokens[n - 2]);
+    prod->tempoCompra   = (float)atof(tokens[n - 3]);
+    prod->tempoPassagem = (float)atof(tokens[n - 2]);
     prod->oferecido     = (strcmp(tokens[n - 1], "true") == 0);
 
     nome_buf[0] = '\0';
@@ -208,7 +209,7 @@ static int parse_id_nome_ate(const char *p, const char *marcador,
 static void guardar_produtos_snapshot(FILE *f, const Cliente *c, int indent) {
     int p;
     for (p = 0; p < c->nProdutos; p++) {
-        fprintf(f, "%*sPRODUTO %d %s %.2f %d %d %s\n",
+        fprintf(f, "%*sPRODUTO %d %s %.2f %.1f %.1f %s\n",
                 indent, "",
                 c->produtos[p].id, c->produtos[p].nome,
                 c->produtos[p].preco, c->produtos[p].tempoCompra,
@@ -233,7 +234,7 @@ int guardar_snapshot(const char *filename, const Supermercado *sm, const Registo
     fprintf(f, "EM_LOJA %d\n", sm->nClientesEmLoja);
     for (i = 0; i < sm->nClientesEmLoja; i++) {
         const Cliente *c = sm->clientesEmLoja[i];
-        fprintf(f, "  LOJA_CLIENTE %s %s entrada_loja=%d tempo_compra=%d\n",
+        fprintf(f, "  LOJA_CLIENTE %s %s entrada_loja=%d tempo_compra=%.1f\n",
                 c->id, c->nome[0] ? c->nome : "Desconhecido",
                 c->instanteEntradaLoja, c->tempoCompraTotal);
         guardar_produtos_snapshot(f, c, 4);
@@ -258,7 +259,7 @@ int guardar_snapshot(const char *filename, const Supermercado *sm, const Registo
                 const EntradaCliente *e = registo_pesquisar_id(registo, c->id);
                 if (e) nome_c = e->nome;
             }
-            fprintf(f, "  EM_ATENDIMENTO %s %s tempo_restante=%d entrada=%d inicio=%d\n",
+            fprintf(f, "  EM_ATENDIMENTO %s %s tempo_restante=%.1f entrada=%d inicio=%d\n",
                     c->id, nome_c, cx->tempoRestanteAtendimento,
                     c->instanteEntradaFila, c->instanteInicioAtendimento);
             guardar_produtos_snapshot(f, c, 4);
@@ -302,7 +303,7 @@ static void recomputar_ofertas_cliente(Cliente *cliente) {
 static void finalizar_cliente_loja(
     Supermercado *sm, HashClientes *hash,
     const char *pid, const char *pnome,
-    int pEntradaLoja, int pTempoCompra,
+    int pEntradaLoja, float pTempoCompra,
     Produto *prods, int nProds)
 {
     Produto *prods_copy;
@@ -341,7 +342,7 @@ static void finalizar_cliente_pendente(
     Supermercado *sm, HashClientes *hash,
     const char *pid, const char *pnome,
     int pEntrada, int pInicio,
-    bool pEmAtendimento, int pTempoRestante,
+    bool pEmAtendimento, float pTempoRestante,
     Produto *prods, int nProds, int caixaAtual)
 {
     Produto *prods_copy;
@@ -382,10 +383,12 @@ static int carregar_formato_novo(FILE *f, Supermercado *sm, HashClientes *hash, 
     int caixaAtual = -1;
     char pendingId[MAX_ID]   = {0};
     char pendingNome[MAX_NOME] = {0};
-    int pendingEntrada = 0, pendingInicio = -1, pendingTempoRestante = 0;
+    int pendingEntrada = 0, pendingInicio = -1;
+    float pendingTempoRestante = 0.0f;
     bool pendingEmAtendimento = false;
     bool pendingEmLoja = false;
-    int pendingEntradaLoja = 0, pendingTempoCompraLoja = 0;
+    int pendingEntradaLoja = 0;
+    float pendingTempoCompraLoja = 0.0f;
     Produto prods[512];
     int nProds = 0;
 
@@ -432,12 +435,13 @@ static int carregar_formato_novo(FILE *f, Supermercado *sm, HashClientes *hash, 
         } else if (strncmp(p, "LOJA_CLIENTE", 12) == 0) {
             const char *rest = p + 12;
             char id[MAX_ID], nome[MAX_NOME];
-            int el = 0, tc = 0;
+            int el = 0;
+            float tc = 0.0f;
             const char *el_pos;
             while (*rest == ' ') rest++;
             if (parse_id_nome_ate(rest, "entrada_loja=", id, nome)) {
                 el_pos = strstr(rest, "entrada_loja=");
-                sscanf(el_pos, "entrada_loja=%d tempo_compra=%d", &el, &tc);
+                sscanf(el_pos, "entrada_loja=%d tempo_compra=%f", &el, &tc);
                 strncpy(pendingId, id, MAX_ID - 1);
                 strncpy(pendingNome, nome, MAX_NOME - 1);
                 pendingEntradaLoja     = el;
@@ -474,12 +478,13 @@ static int carregar_formato_novo(FILE *f, Supermercado *sm, HashClientes *hash, 
         } else if (strncmp(p, "EM_ATENDIMENTO", 14) == 0) {
             const char *rest = p + 14;
             char id[MAX_ID], nome[MAX_NOME];
-            int tr = 0, ent = 0, ini = -1;
+            float tr = 0.0f;
+            int ent = 0, ini = -1;
             const char *tr_pos;
             while (*rest == ' ') rest++;
             if (parse_id_nome_ate(rest, "tempo_restante=", id, nome)) {
                 tr_pos = strstr(rest, "tempo_restante=");
-                sscanf(tr_pos, "tempo_restante=%d entrada=%d inicio=%d", &tr, &ent, &ini);
+                sscanf(tr_pos, "tempo_restante=%f entrada=%d inicio=%d", &tr, &ent, &ini);
                 strncpy(pendingId, id, MAX_ID - 1);
                 strncpy(pendingNome, nome, MAX_NOME - 1);
                 pendingEntrada = ent;
@@ -635,7 +640,7 @@ void mostrar_caixa(const Caixa *caixa) {
     else
         printf("\nCaixa %d | estado=%s\n", caixa->id + 1, estado);
     if (caixa->emAtendimento) {
-        printf("  Em atendimento (tempo_restante=%d):\n", caixa->tempoRestanteAtendimento);
+        printf("  Em atendimento (tempo_restante=%.1f):\n", caixa->tempoRestanteAtendimento);
         mostrar_cliente(caixa->emAtendimento);
     } else {
         printf("  Em atendimento: (nenhum)\n");
@@ -652,9 +657,9 @@ void mostrar_estado_supermercado(const Supermercado *sm) {
         printf("\n--- Clientes a fazer compras (%d) ---\n", sm->nClientesEmLoja);
         for (i = 0; i < sm->nClientesEmLoja; ++i) {
             const Cliente *c = sm->clientesEmLoja[i];
-            int restante = (c->instanteEntradaLoja + c->tempoCompraTotal) - sm->instanteAtual;
-            if (restante < 0) restante = 0;
-            printf("  %s | compra=%ds | restante=%ds\n", c->id, c->tempoCompraTotal, restante);
+            float restante = (c->instanteEntradaLoja + c->tempoCompraTotal) - sm->instanteAtual;
+            if (restante < 0.0f) restante = 0.0f;
+            printf("  %s | compra=%.1fs | restante=%.1fs\n", c->id, c->tempoCompraTotal, restante);
         }
     }
     for (i = 0; i < sm->cfg.nCaixas; ++i) mostrar_caixa(&sm->caixas[i]);
@@ -702,7 +707,7 @@ int inserir_novo_cliente(Supermercado *sm, HashClientes *hash, const char *idOri
         return INSERIR_CLIENTE_MEMORIA;
     }
 
-    snprintf(detalhes, sizeof(detalhes), "%s entrou no supermercado com %d produtos (compra: %ds)",
+    snprintf(detalhes, sizeof(detalhes), "%s entrou no supermercado com %d produtos (compra: %.1fs)",
              id, nProdutos, cliente->tempoCompraTotal);
     log_acao(sm->logFile, "ENTRADA_LOJA", detalhes);
     return INSERIR_CLIENTE_EM_COMPRAS;
@@ -744,15 +749,20 @@ int mover_cliente_caixa(Supermercado *sm, HashClientes *hash, const char *idOrig
 static void concluir_atendimento(Supermercado *sm, HashClientes *hash, Caixa *caixa) {
     Cliente *cliente = caixa->emAtendimento;
     char detalhes[160];
+    float valorLiquido;
     if (!cliente) return;
     cliente->atendido = true;
     cliente->tempoEsperaTotal = cliente->instanteInicioAtendimento - cliente->instanteEntradaFila;
+    valorLiquido = cliente_valor_total(cliente) - cliente->valorOferecido;
+    strncpy(cliente->operadorAtendimento, caixa->operador, MAX_OPERADOR - 1);
+    cliente->operadorAtendimento[MAX_OPERADOR - 1] = '\0';
     caixa->totalClientesAtendidos++;
     caixa->totalProdutosVendidos += (cliente->nProdutos - cliente->produtosOferecidos);
-    caixa->totalValorVendido += cliente_valor_total(cliente) - cliente->valorOferecido;
+    caixa->totalValorVendido += valorLiquido;
     caixa_adicionar_historico(caixa, cliente);
     sm->totalClientesAtendidos++;
     sm->totalProdutosVendidos += (cliente->nProdutos - cliente->produtosOferecidos);
+    sm->totalValorVendido += valorLiquido;
     sm->somaTemposEspera += cliente->tempoEsperaTotal;
     hash_remover(hash, cliente->id);
     snprintf(detalhes, sizeof(detalhes), "%s atendido na caixa %d | espera=%d | oferecidos=%d | valor_oferecido=%.2f",
@@ -998,7 +1008,7 @@ int fechar_caixa_imediata_manual(Supermercado *sm, HashClientes *hash, int idCai
     if (sm->caixas[idCaixa].emAtendimento) {
         Cliente *cliente = sm->caixas[idCaixa].emAtendimento;
         int destino = encontrar_caixa_menos_pessoas_aberta(sm, idCaixa);
-        int tempoRestanteAntigo = sm->caixas[idCaixa].tempoRestanteAtendimento;
+        float tempoRestanteAntigo = sm->caixas[idCaixa].tempoRestanteAtendimento;
         int inicioAntigo = cliente->instanteInicioAtendimento;
         bool estavaAntigo = cliente->estavaEmAtendimento;
         cliente->estavaEmAtendimento = false;
@@ -1094,6 +1104,44 @@ size_t memoria_desperdicada(const Supermercado *sm, const HashClientes *hash) {
     return total;
 }
 
+typedef struct {
+    char nome[MAX_OPERADOR];
+    int totalClientes;
+    int totalProdutos;
+    float totalValor;
+} EstatisticaOperador;
+
+static int calcular_estatisticas_operadores(const Supermercado *sm,
+                                             EstatisticaOperador *ops,
+                                             int maxOps) {
+    int i, j, nOps = 0;
+    for (i = 0; i < sm->cfg.nCaixas; ++i) {
+        for (j = 0; j < sm->caixas[i].nHistorico; ++j) {
+            Cliente *c = sm->caixas[i].historicoAtendidos[j];
+            int k, encontrado = 0;
+            if (c->operadorAtendimento[0] == '\0') continue;
+            for (k = 0; k < nOps; ++k) {
+                if (strcmp(ops[k].nome, c->operadorAtendimento) == 0) {
+                    ops[k].totalClientes++;
+                    ops[k].totalProdutos += (c->nProdutos - c->produtosOferecidos);
+                    ops[k].totalValor    += cliente_valor_total(c) - c->valorOferecido;
+                    encontrado = 1;
+                    break;
+                }
+            }
+            if (!encontrado && nOps < maxOps) {
+                strncpy(ops[nOps].nome, c->operadorAtendimento, MAX_OPERADOR - 1);
+                ops[nOps].nome[MAX_OPERADOR - 1] = '\0';
+                ops[nOps].totalClientes = 1;
+                ops[nOps].totalProdutos = (c->nProdutos - c->produtosOferecidos);
+                ops[nOps].totalValor    = cliente_valor_total(c) - c->valorOferecido;
+                nOps++;
+            }
+        }
+    }
+    return nOps;
+}
+
 int guardar_estatisticas_csv(const char *filename, const Supermercado *sm) {
     FILE *f = fopen(filename, "w");
     double mediaEspera = (sm->totalClientesAtendidos > 0) ? ((double)sm->somaTemposEspera / sm->totalClientesAtendidos) : 0.0;
@@ -1102,11 +1150,23 @@ int guardar_estatisticas_csv(const char *filename, const Supermercado *sm) {
         printf("Nao foi possivel criar %s\n", filename);
         return 0;
     }
-    fprintf(f, "instante_final,total_clientes_atendidos,total_produtos_vendidos,tempo_medio_espera,total_produtos_oferecidos,total_valor_oferecido\n");
-    fprintf(f, "%d,%d,%d,%.2f,%d,%.2f\n", sm->instanteAtual, sm->totalClientesAtendidos, sm->totalProdutosVendidos, mediaEspera, sm->totalProdutosOferecidos, sm->totalValorOferecido);
+    fprintf(f, "instante_final,total_clientes_atendidos,total_produtos_vendidos,tempo_medio_espera,total_produtos_oferecidos,total_valor_oferecido,total_valor_vendido\n");
+    fprintf(f, "%d,%d,%d,%.2f,%d,%.2f,%.2f\n", sm->instanteAtual, sm->totalClientesAtendidos, sm->totalProdutosVendidos, mediaEspera, sm->totalProdutosOferecidos, sm->totalValorOferecido, sm->totalValorVendido);
     fprintf(f, "\ncaixa,operador,clientes_atendidos,produtos_vendidos,valor_vendido\n");
     for (i = 0; i < sm->cfg.nCaixas; ++i) {
         fprintf(f, "%d,%s,%d,%d,%.2f\n", i + 1, sm->caixas[i].ultimoOperador, sm->caixas[i].totalClientesAtendidos, sm->caixas[i].totalProdutosVendidos, sm->caixas[i].totalValorVendido);
+    }
+    {
+        int maxOps = sm->cfg.nCaixas * 2;
+        EstatisticaOperador *ops = (EstatisticaOperador *)malloc(sizeof(EstatisticaOperador) * maxOps);
+        if (ops) {
+            int k, nOps = calcular_estatisticas_operadores(sm, ops, maxOps);
+            fprintf(f, "\noperador,clientes_atendidos,produtos_vendidos,valor_vendido\n");
+            for (k = 0; k < nOps; ++k) {
+                fprintf(f, "%s,%d,%d,%.2f\n", ops[k].nome, ops[k].totalClientes, ops[k].totalProdutos, ops[k].totalValor);
+            }
+            free(ops);
+        }
     }
     fclose(f);
     return 1;
@@ -1123,7 +1183,7 @@ int guardar_historico_caixas_csv(const char *filename, const Supermercado *sm) {
     for (i = 0; i < sm->cfg.nCaixas; ++i) {
         for (j = 0; j < sm->caixas[i].nHistorico; ++j) {
             Cliente *c = sm->caixas[i].historicoAtendidos[j];
-            fprintf(f, "%d,%s,%s,%d,%d,%d,%.2f\n", i + 1, sm->caixas[i].ultimoOperador, c->id, c->nProdutos, c->tempoEsperaTotal, c->produtosOferecidos, c->valorOferecido);
+            fprintf(f, "%d,%s,%s,%d,%d,%d,%.2f\n", i + 1, c->operadorAtendimento, c->id, c->nProdutos, c->tempoEsperaTotal, c->produtosOferecidos, c->valorOferecido);
         }
     }
     fclose(f);
@@ -1132,8 +1192,8 @@ int guardar_historico_caixas_csv(const char *filename, const Supermercado *sm) {
 
 void mostrar_estatisticas_finais(const Supermercado *sm) {
     int i;
-    int idxMaisClientes = -1, idxMaisProdutos = -1, idxMenosClientes = -1;
-    int maxClientes = -1, maxProdutos = -1, minClientes = 0;
+    int idxMaisClientes = -1, idxMaisProdutos = -1;
+    int maxClientes = -1, maxProdutos = -1;
     double mediaEspera = (sm->totalClientesAtendidos > 0) ? ((double)sm->somaTemposEspera / sm->totalClientesAtendidos) : 0.0;
 
     for (i = 0; i < sm->cfg.nCaixas; ++i) {
@@ -1146,10 +1206,6 @@ void mostrar_estatisticas_finais(const Supermercado *sm) {
             maxProdutos = c->totalProdutosVendidos;
             idxMaisProdutos = i;
         }
-        if (idxMenosClientes == -1 || c->totalClientesAtendidos < minClientes) {
-            minClientes = c->totalClientesAtendidos;
-            idxMenosClientes = i;
-        }
     }
 
     printf("\n================ ESTATISTICAS FINAIS ================\n");
@@ -1159,9 +1215,30 @@ void mostrar_estatisticas_finais(const Supermercado *sm) {
     printf("Tempo medio de espera: %.2f\n", mediaEspera);
     printf("Produtos oferecidos: %d\n", sm->totalProdutosOferecidos);
     printf("Valor oferecido: %.2f\n", sm->totalValorOferecido);
+    printf("Total de valor vendido: %.2f\n", sm->totalValorVendido);
     if (idxMaisClientes != -1) printf("Caixa que atendeu mais pessoas: Caixa %d (%s) com %d clientes\n", idxMaisClientes + 1, sm->caixas[idxMaisClientes].ultimoOperador, sm->caixas[idxMaisClientes].totalClientesAtendidos);
     if (idxMaisProdutos != -1) printf("Caixa que vendeu mais produtos: Caixa %d (%s) com %d produtos\n", idxMaisProdutos + 1, sm->caixas[idxMaisProdutos].ultimoOperador, sm->caixas[idxMaisProdutos].totalProdutosVendidos);
-    if (idxMenosClientes != -1) printf("Operador que atendeu menos pessoas: %s com %d clientes\n", sm->caixas[idxMenosClientes].ultimoOperador, sm->caixas[idxMenosClientes].totalClientesAtendidos);
+
+    {
+        int maxOps = sm->cfg.nCaixas * 2;
+        EstatisticaOperador *ops = (EstatisticaOperador *)malloc(sizeof(EstatisticaOperador) * maxOps);
+        if (ops) {
+            int k, nOps = calcular_estatisticas_operadores(sm, ops, maxOps);
+            if (nOps > 0) {
+                int idxMenos = 0;
+                printf("\n--- Estatisticas por Operador ---\n");
+                for (k = 0; k < nOps; ++k) {
+                    printf("  %s: %d clientes | %d produtos | %.2f euros\n",
+                           ops[k].nome, ops[k].totalClientes, ops[k].totalProdutos, ops[k].totalValor);
+                    if (ops[k].totalClientes < ops[idxMenos].totalClientes)
+                        idxMenos = k;
+                }
+                printf("Operador que atendeu menos pessoas: %s com %d clientes\n",
+                       ops[idxMenos].nome, ops[idxMenos].totalClientes);
+            }
+            free(ops);
+        }
+    }
 
     for (i = 0; i < sm->cfg.nCaixas; ++i) caixa_listar_historico(&sm->caixas[i]);
 }

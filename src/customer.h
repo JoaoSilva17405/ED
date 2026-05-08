@@ -11,7 +11,7 @@ typedef struct Cliente {
     int nProdutos;
     Produto *produtos;
     int instanteEntradaLoja;
-    int tempoCompraTotal;
+    float tempoCompraTotal;
     bool comprasTerminadas;
     int instanteEntradaFila;
     int instanteInicioAtendimento;
@@ -22,11 +22,12 @@ typedef struct Cliente {
     bool estavaEmAtendimento;
     bool atendido;
     bool oferecimentoFeito;
+    char operadorAtendimento[MAX_OPERADOR];
 } Cliente;
 
 Cliente *criar_cliente(const char *id, const char *nome, int nProdutos, int instanteAtual, int caixaAtual, Produto *produtos);
 void destruir_cliente(Cliente *cliente);
-int cliente_tempo_atendimento(const Cliente *cliente);
+float cliente_tempo_atendimento(const Cliente *cliente);
 float cliente_valor_total(const Cliente *cliente);
 float oferecer_um_produto(Cliente *cliente);
 void mostrar_cliente(const Cliente *cliente);

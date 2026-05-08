@@ -8,7 +8,7 @@ void caixa_init(Caixa *caixa, int id, const char *operador, EstadoCaixa estado) 
     caixa->estado = estado;
     fila_init(&caixa->fila);
     caixa->emAtendimento = NULL;
-    caixa->tempoRestanteAtendimento = 0;
+    caixa->tempoRestanteAtendimento = 0.0f;
     caixa->totalClientesAtendidos = 0;
     caixa->totalProdutosVendidos = 0;
     caixa->totalValorVendido = 0.0f;

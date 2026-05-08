@@ -1,15 +1,16 @@
 #include "product.h"
 
-int tempo_total_produtos(const Produto *produtos, int nProdutos) {
-    int total = 0;
+float tempo_total_produtos(const Produto *produtos, int nProdutos) {
+    float total = 0.0f;
     int i;
     for (i = 0; i < nProdutos; ++i) total += produtos[i].tempoPassagem;
     return total;
 }
 
-int tempo_compra_total_produtos(const Produto *produtos, int nProdutos) {
-    int total = 0, i;
-    if (!produtos || nProdutos <= 0) return 0;
+float tempo_compra_total_produtos(const Produto *produtos, int nProdutos) {
+    float total = 0.0f;
+    int i;
+    if (!produtos || nProdutos <= 0) return 0.0f;
     for (i = 0; i < nProdutos; ++i) total += produtos[i].tempoCompra;
     return total;
 }

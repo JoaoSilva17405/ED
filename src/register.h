@@ -11,7 +11,7 @@ typedef struct {
     EstadoCaixa estado;
     FilaClientes fila;
     Cliente *emAtendimento;
-    int tempoRestanteAtendimento;
+    float tempoRestanteAtendimento;
     int totalClientesAtendidos;
     int totalProdutosVendidos;
     float totalValorVendido;

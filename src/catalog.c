@@ -3,12 +3,6 @@
 
 #define CAT_GROWTH 64
 
-/* ceil manual sem depender de math.h; depois aplica max(2, resultado) */
-static int tempo_para_int(float f) {
-    int i = (int)f;
-    if ((float)i < f) i++;
-    return i < 2 ? 2 : i;
-}
 
 CatalogoProdutos *catalog_carregar(const char *filename) {
     FILE *f = fopen(filename, "r");
@@ -68,8 +62,8 @@ CatalogoProdutos *catalog_carregar(const char *filename) {
         strncpy(cat->lista[cat->tamanho].nome, nome, MAX_NOME - 1);
         cat->lista[cat->tamanho].nome[MAX_NOME - 1] = '\0';
         cat->lista[cat->tamanho].preco         = preco;
-        cat->lista[cat->tamanho].tempoCompra   = tempo_para_int(tempoCompraF);
-        cat->lista[cat->tamanho].tempoPassagem = tempo_para_int(tempo);
+        cat->lista[cat->tamanho].tempoCompra   = tempoCompraF;
+        cat->lista[cat->tamanho].tempoPassagem = tempo;
         cat->lista[cat->tamanho].oferecido     = false;
         cat->tamanho++;
     }
@@ -94,7 +88,6 @@ Produto *catalog_obter_produtos_aleatorios(const CatalogoProdutos *cat, int n, c
     for (i = 0; i < n; i++) {
         produtos[i] = cat->lista[rand() % cat->tamanho];
         produtos[i].oferecido = false;
-        if (produtos[i].tempoPassagem < 2) produtos[i].tempoPassagem = 2;
         if (cfg && produtos[i].preco > cfg->maxPreco)
             produtos[i].preco = cfg->maxPreco;
         if (produtos[i].preco <= 0.0f)

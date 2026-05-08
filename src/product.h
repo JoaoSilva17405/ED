@@ -7,13 +7,13 @@ typedef struct {
     int id;
     char nome[MAX_NOME];
     float preco;
-    int tempoCompra;
-    int tempoPassagem;
+    float tempoCompra;
+    float tempoPassagem;
     bool oferecido;
 } Produto;
 
-int tempo_total_produtos(const Produto *produtos, int nProdutos);
-int tempo_compra_total_produtos(const Produto *produtos, int nProdutos);
+float tempo_total_produtos(const Produto *produtos, int nProdutos);
+float tempo_compra_total_produtos(const Produto *produtos, int nProdutos);
 float valor_total_produtos(const Produto *produtos, int nProdutos);
 void libertar_produtos(Produto *produtos);
 

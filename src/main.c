@@ -4,6 +4,9 @@
 #include "utils.h"
 #include "client_registry.h"
 #include "catalog.h"
+#include "simulation.h"
+#include <conio.h>
+#include <windows.h>
 
 static void menu_principal(void) {
     printf("\n================ COMPRA AQUI LDA. ================\n");
@@ -21,6 +24,8 @@ static void menu_principal(void) {
     printf("12. Mostrar estatisticas finais\n");
     printf("13. Gravar estatisticas CSV\n");
     printf("14. Gravar snapshot do estado atual\n");
+    printf("15. Iniciar / Retomar simulacao\n");
+    printf("16. Alterar fluxo de clientes\n");
     printf("0. Sair\n");
 }
 
@@ -81,10 +86,67 @@ int main(void) {
         return 1;
     }
 
-    do {
+    EstadoSimulacao estadoSim = SIM_PAUSADA;
+    int terminado = 0;
+
+    while (!terminado) {
+        if (estadoSim == SIM_A_CORRER) {
+            if (_kbhit()) {
+                _getch();
+                estadoSim = SIM_PAUSADA;
+                continue;
+            }
+            {
+                int eventos = avancar_simulacao(&sm, &hash, 1);
+                if (tentar_inserir_cliente_automatico(&sm, &hash, registo))
+                    eventos |= EVT_CLIENTE_ENTROU_LOJA;
+                if (eventos != EVT_NENHUM) {
+                    system("cls");
+                    mostrar_estado_supermercado(&sm);
+                    sim_mostrar_status_bar(SIM_A_CORRER, sm.instanteAtual, sm.cfg.intervaloChegada);
+                }
+            }
+            Sleep(100);
+            continue;
+        }
+
+        /* --- estado PAUSADA: mostrar menu e processar opcao --- */
+        sim_mostrar_status_bar(SIM_PAUSADA, sm.instanteAtual, sm.cfg.intervaloChegada);
         menu_principal();
         opcao = ler_int("Opcao: ");
         switch (opcao) {
+            case 15:
+                log_acao(logFile, "MENU", "Iniciar/Retomar simulacao");
+                estadoSim = SIM_A_CORRER;
+                system("cls");
+                mostrar_estado_supermercado(&sm);
+                sim_mostrar_status_bar(SIM_A_CORRER, sm.instanteAtual, sm.cfg.intervaloChegada);
+                break;
+            case 16: {
+                int escolha;
+                printf("\n--- Alterar Fluxo de Clientes ---\n");
+                printf("1. CALMO        (1 cliente cada %d ticks)\n", FLUXO_CALMO);
+                printf("2. NORMAL       (1 cliente cada %d ticks)\n", FLUXO_NORMAL);
+                printf("3. HORA DE PONTA (1 cliente cada %d ticks)\n", FLUXO_HORA_DE_PONTA);
+                escolha = ler_int("Opcao: ");
+                {
+                    int novoIntervalo = 0;
+                    if (escolha == 1) novoIntervalo = FLUXO_CALMO;
+                    else if (escolha == 2) novoIntervalo = FLUXO_NORMAL;
+                    else if (escolha == 3) novoIntervalo = FLUXO_HORA_DE_PONTA;
+                    else { printf("Opcao invalida.\n"); break; }
+
+                    if (sim_alterar_fluxo(&sm.cfg, novoIntervalo) == EVT_FLUXO_ALTERADO) {
+                        cfg.intervaloChegada = sm.cfg.intervaloChegada;
+                        log_acao(logFile, "MENU", "Alterar fluxo de clientes");
+                        system("cls");
+                        mostrar_estado_supermercado(&sm);
+                        sim_mostrar_status_bar(estadoSim, sm.instanteAtual, sm.cfg.intervaloChegada);
+                        printf("Fluxo alterado para: %s\n", sim_nome_fluxo(sm.cfg.intervaloChegada));
+                    }
+                }
+                break;
+            }
             case 1:
                 log_acao(logFile, "MENU", "Mostrar configuracao");
                 mostrar_configuracao(&cfg);
@@ -254,11 +316,12 @@ int main(void) {
                 break;
             case 0:
                 log_acao(logFile, "MENU", "Sair");
+                terminado = 1;
                 break;
             default:
                 printf("Opcao invalida.\n");
         }
-    } while (opcao != 0);
+    }
 
     guardar_snapshot(DATA_FILE, &sm, registo);
     guardar_estatisticas_csv(ESTATISTICAS_FILE, &sm);

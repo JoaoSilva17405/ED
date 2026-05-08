@@ -19,6 +19,15 @@
 #define ESTATISTICAS_FILE "output/estatisticas.csv"
 #define HISTORICO_CAIXAS_FILE "output/historico_caixas.csv"
 
+#define EVT_NENHUM                     0
+#define EVT_CLIENTE_ENTROU_LOJA        (1 << 0)
+#define EVT_CLIENTE_ENTROU_FILA        (1 << 1)
+#define EVT_CLIENTE_INICIO_ATENDIMENTO (1 << 2)
+#define EVT_CLIENTE_FIM_ATENDIMENTO    (1 << 3)
+#define EVT_CAIXA_ABRIU                (1 << 4)
+#define EVT_CAIXA_FECHOU               (1 << 5)
+#define EVT_FLUXO_ALTERADO             (1 << 6)
+
 #define INSERIR_CLIENTE_DUPLICADO -1
 #define INSERIR_CLIENTE_INVALIDO -2
 #define INSERIR_CLIENTE_SEM_CAIXA -3
@@ -51,7 +60,7 @@ void mostrar_estado_supermercado(const Supermercado *sm);
 void mostrar_caixa(const Caixa *caixa);
 int inserir_novo_cliente(Supermercado *sm, HashClientes *hash, const char *id, const char *nome, Produto *produtos, int nProdutos);
 int mover_cliente_caixa(Supermercado *sm, HashClientes *hash, const char *id, int novaCaixa);
-void avancar_simulacao(Supermercado *sm, HashClientes *hash, int passos);
+int  avancar_simulacao(Supermercado *sm, HashClientes *hash, int passos);
 void verificar_politica_caixas(Supermercado *sm, HashClientes *hash);
 int abrir_caixa_manual(Supermercado *sm, int idCaixa);
 int fechar_caixa_suave_manual(Supermercado *sm, int idCaixa);
@@ -63,5 +72,7 @@ int guardar_snapshot(const char *filename, const Supermercado *sm, const Registo
 int guardar_estatisticas_csv(const char *filename, const Supermercado *sm);
 int guardar_historico_caixas_csv(const char *filename, const Supermercado *sm);
 void mostrar_estatisticas_finais(const Supermercado *sm);
+int  tentar_inserir_cliente_automatico(Supermercado *sm, HashClientes *hash,
+                                        const RegistoClientes *registo);
 
 #endif

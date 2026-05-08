@@ -40,7 +40,6 @@ static Supermercado make_sm(int nCaixas, int maxFila, int minFila) {
     memset(&cfg, 0, sizeof(cfg));
     cfg.maxEspera = 120;
     cfg.nCaixas = nCaixas;
-    cfg.tempoAtendimentoProduto = 1;
     cfg.maxPreco = 40.0f;
     cfg.maxFila = maxFila;
     cfg.minFila = minFila;

@@ -55,6 +55,8 @@
         <Unit filename="src/queue.h" />
         <Unit filename="src/register.c"><Option compilerVar="CC" /></Unit>
         <Unit filename="src/register.h" />
+        <Unit filename="src/simulation.c"><Option compilerVar="CC" /></Unit>
+        <Unit filename="src/simulation.h" />
         <Unit filename="src/store.c"><Option compilerVar="CC" /></Unit>
         <Unit filename="src/store.h" />
         <Unit filename="src/utils.c"><Option compilerVar="CC" /></Unit>

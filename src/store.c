@@ -588,9 +588,7 @@ static int carregar_formato_antigo(const char *filename, Supermercado *sm, HashC
                 Produto *prods;
                 Cliente *cliente;
                 trim(id);
-                prods = sm->catalogo
-                    ? catalog_obter_produtos_aleatorios(sm->catalogo, nProdutos, &sm->cfg)
-                    : gerar_produtos_aleatorios(nProdutos, &sm->cfg);
+                prods = catalog_obter_produtos_aleatorios(sm->catalogo, nProdutos, &sm->cfg);
                 cliente = criar_cliente(id, "", nProdutos, sm->instanteAtual, caixaAtual, prods);
                 if (cliente) {
                     if (fila_inserir(&sm->caixas[caixaAtual].fila, cliente) &&
@@ -768,10 +766,12 @@ static void concluir_atendimento(Supermercado *sm, HashClientes *hash, Caixa *ca
     }
 }
 
-void avancar_simulacao(Supermercado *sm, HashClientes *hash, int passos) {
-    int p;
+int avancar_simulacao(Supermercado *sm, HashClientes *hash, int passos) {
+    int p, eventos = EVT_NENHUM;
     for (p = 0; p < passos; ++p) {
         int i, j;
+        int caixas_antes = contar_caixas_realmente_abertas(sm);
+
         sm->instanteAtual++;
 
         /* fase de compras: mover clientes que terminaram para a fila */
@@ -791,6 +791,7 @@ void avancar_simulacao(Supermercado *sm, HashClientes *hash, int passos) {
                              "%s terminou compras e entrou na fila da caixa %d",
                              c->id, destino + 1);
                     log_acao(sm->logFile, "ENTRAR_FILA", detalhes);
+                    eventos |= EVT_CLIENTE_ENTROU_FILA;
                     verificar_politica_caixas(sm, hash);
                     /* swap-with-last para remover em O(1) */
                     sm->clientesEmLoja[j] = sm->clientesEmLoja[--sm->nClientesEmLoja];
@@ -805,10 +806,16 @@ void avancar_simulacao(Supermercado *sm, HashClientes *hash, int passos) {
         for (i = 0; i < sm->cfg.nCaixas; ++i) {
             Caixa *caixa = &sm->caixas[i];
             if (caixa->estado == CAIXA_ABERTA || caixa->estado == CAIXA_A_FECHAR) {
+                int sem_atendimento = (caixa->emAtendimento == NULL);
                 iniciar_atendimento(caixa, sm->instanteAtual);
+                if (sem_atendimento && caixa->emAtendimento != NULL)
+                    eventos |= EVT_CLIENTE_INICIO_ATENDIMENTO;
                 if (caixa->emAtendimento) {
                     caixa->tempoRestanteAtendimento--;
-                    if (caixa->tempoRestanteAtendimento <= 0) concluir_atendimento(sm, hash, caixa);
+                    if (caixa->tempoRestanteAtendimento <= 0) {
+                        concluir_atendimento(sm, hash, caixa);
+                        eventos |= EVT_CLIENTE_FIM_ATENDIMENTO;
+                    }
                 }
             }
         }
@@ -857,7 +864,43 @@ void avancar_simulacao(Supermercado *sm, HashClientes *hash, int passos) {
         }
 
         verificar_politica_caixas(sm, hash);
+
+        {
+            int caixas_depois = contar_caixas_realmente_abertas(sm);
+            if (caixas_depois > caixas_antes) eventos |= EVT_CAIXA_ABRIU;
+            else if (caixas_depois < caixas_antes) eventos |= EVT_CAIXA_FECHOU;
+        }
     }
+    return eventos;
+}
+
+int tentar_inserir_cliente_automatico(Supermercado *sm, HashClientes *hash,
+                                       const RegistoClientes *registo) {
+    int i, idx, N, resultado;
+    EntradaCliente *entrada = NULL;
+    Produto *carrinho;
+
+    if (!registo || registo->tamanho == 0) return 0;
+    if (sm->cfg.intervaloChegada <= 0) return 0;
+    if (sm->instanteAtual % sm->cfg.intervaloChegada != 0) return 0;
+
+    idx = rand() % registo->tamanho;
+    for (i = 0; i < registo->tamanho; i++) {
+        EntradaCliente *c = &registo->lista[(idx + i) % registo->tamanho];
+        if (!hash_pesquisar(hash, c->id)) {
+            entrada = c;
+            break;
+        }
+    }
+    if (!entrada || !sm->catalogo) return 0;
+
+    N = sm->cfg.minProdutos + rand() % (sm->cfg.maxProdutos - sm->cfg.minProdutos + 1);
+    carrinho = catalog_obter_produtos_aleatorios(sm->catalogo, N, &sm->cfg);
+    if (!carrinho) return 0;
+
+    resultado = inserir_novo_cliente(sm, hash, entrada->id, entrada->nome, carrinho, N);
+    free(carrinho);
+    return resultado == INSERIR_CLIENTE_EM_COMPRAS ? 1 : 0;
 }
 
 void verificar_politica_caixas(Supermercado *sm, HashClientes *hash) {

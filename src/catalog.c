@@ -95,8 +95,6 @@ Produto *catalog_obter_produtos_aleatorios(const CatalogoProdutos *cat, int n, c
         produtos[i] = cat->lista[rand() % cat->tamanho];
         produtos[i].oferecido = false;
         if (produtos[i].tempoPassagem < 2) produtos[i].tempoPassagem = 2;
-        if (cfg && produtos[i].tempoPassagem > cfg->tempoAtendimentoProduto)
-            produtos[i].tempoPassagem = cfg->tempoAtendimentoProduto;
         if (cfg && produtos[i].preco > cfg->maxPreco)
             produtos[i].preco = cfg->maxPreco;
         if (produtos[i].preco <= 0.0f)

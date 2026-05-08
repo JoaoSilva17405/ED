@@ -48,7 +48,6 @@ static void test_obter_produtos_aleatorios(void) {
     Produto *prods;
     CatalogoProdutos *cat = catalog_carregar("Produtos.txt");
     if (!cat) { fail_count++; return; }
-    cfg.tempoAtendimentoProduto = 6;
     cfg.maxPreco = 40.0f;
     prods = catalog_obter_produtos_aleatorios(cat, 5, &cfg);
     CHECK(prods != NULL, "catalog_obter_produtos_aleatorios retorna nao-NULL");
@@ -56,9 +55,9 @@ static void test_obter_produtos_aleatorios(void) {
         int i, todos_reais = 1;
         for (i = 0; i < 5; i++) {
             if (prods[i].nome[0] == '\0') { todos_reais = 0; break; }
-            if (prods[i].tempoPassagem < 2 || prods[i].tempoPassagem > 6) { todos_reais = 0; break; }
+            if (prods[i].tempoPassagem < 2) { todos_reais = 0; break; }
         }
-        CHECK(todos_reais, "5 produtos com nomes reais e tempo em [2, 6]");
+        CHECK(todos_reais, "5 produtos com nomes reais e tempoPassagem >= 2");
         free(prods);
     }
     catalog_destruir(cat);
